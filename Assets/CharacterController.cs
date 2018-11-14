@@ -42,10 +42,10 @@ public class CharacterController : MonoBehaviour
         {
             controller.Move(AIAgent.desiredVelocity, false, false);
         }
-        //else
-        //{
-        //    controller.Move(Vector3.zero, false, false);
-        //}
+        else
+        {
+            controller.Move(Vector3.zero, false, false);
+        }
 
         // Dance time
         if(Input.GetKeyDown(KeyCode.Space))
