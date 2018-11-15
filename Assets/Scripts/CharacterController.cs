@@ -4,11 +4,14 @@ using UnityStandardAssets.Characters.ThirdPerson;
 
 public class CharacterController : MonoBehaviour
 {
-
+    // Components
+    Animator anim;
     Camera mainCam;
+    CharacterStats stats;
     NavMeshAgent AIAgent;
     ThirdPersonCharacter controller;
-    Animator anim;
+
+
 
     private void Start()
     {
@@ -16,8 +19,10 @@ public class CharacterController : MonoBehaviour
         AIAgent = GetComponent<NavMeshAgent>();
         controller = GetComponent<ThirdPersonCharacter>();
         anim = GetComponent<Animator>();
+        stats = GetComponent<CharacterStats>();
 
         AIAgent.updateRotation = false;
+        
     }
 
     // Update is called once per frame
@@ -65,8 +70,6 @@ public class CharacterController : MonoBehaviour
 
     void Attack()
     {
-        anim.SetBool("Attacking", true);
-        anim.SetInteger("AttackType", Random.Range(0, 7));
+        anim.SetInteger("AttackType", Random.Range(0, 8));
     }
-
 }
