@@ -19,6 +19,7 @@ public class CharacterController : MonoBehaviour
 
         AIAgent.updateRotation = false;
     }
+
     // Update is called once per frame
     void Update()
     {
@@ -33,6 +34,8 @@ public class CharacterController : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
                 AIAgent.SetDestination(hit.point);
+                AIAgent.isStopped = false;
+                Debug.Log(hit.point);
             }
         }
 
@@ -45,13 +48,25 @@ public class CharacterController : MonoBehaviour
         else
         {
             controller.Move(Vector3.zero, false, false);
+            AIAgent.isStopped = true;
         }
 
-        // Dance time
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            bool result = !(anim.GetBool("Dancing"));
-            anim.SetBool("Dancing", result);
+            bool result = !(anim.GetBool("InCombat"));
+            anim.SetBool("InCombat", result);
+        }
+
+        if(Input.GetMouseButtonDown(1))
+        {
+            Attack();
         }
     }
+
+    void Attack()
+    {
+        anim.SetBool("Attacking", true);
+        anim.SetInteger("AttackType", Random.Range(0, 7));
+    }
+
 }
