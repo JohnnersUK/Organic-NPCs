@@ -47,9 +47,7 @@ public class AttackCollider : MonoBehaviour {
     {
         if (other.tag == "character" && (other.name != player.name))
         {
-            Debug.Log("Hit");
-            other.GetComponent<CharacterStats>().GetHit(stats.damage);
-            Debug.Log("Hit character");
+            other.GetComponent<CharacterStats>().GetHit(stats.table["damage"]);
             col.enabled = false;
         }
     }

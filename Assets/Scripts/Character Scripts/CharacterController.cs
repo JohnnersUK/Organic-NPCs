@@ -5,13 +5,14 @@ using UnityStandardAssets.Characters.ThirdPerson;
 public class CharacterController : MonoBehaviour
 {
     // Components
-    Animator anim;
-    Camera mainCam;
-    CharacterStats stats;
-    NavMeshAgent AIAgent;
-    ThirdPersonCharacter controller;
+    private Animator Anim;
+    private Camera MainCam;
+    private CharacterStats Stats;
+    private CombatController CController;
+    private GameObject CombatTarget;
+    private NavMeshAgent AIAgent;
+    private ThirdPersonCharacter TPController;
 
-    GameObject combatTarget;
 
     enum State
     {
@@ -22,11 +23,12 @@ public class CharacterController : MonoBehaviour
 
     private void Start()
     {
-        mainCam = Camera.main;
+        MainCam = Camera.main;
         AIAgent = GetComponent<NavMeshAgent>();
-        controller = GetComponent<ThirdPersonCharacter>();
-        anim = GetComponent<Animator>();
-        stats = GetComponent<CharacterStats>();
+        TPController = GetComponent<ThirdPersonCharacter>();
+        Anim = GetComponent<Animator>();
+        Stats = GetComponent<CharacterStats>();
+        CController = GetComponent<CombatController>();
 
         AIAgent.updateRotation = false;
     }
@@ -39,7 +41,7 @@ public class CharacterController : MonoBehaviour
         // as target destination for the AI agent
         if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+            Ray ray = MainCam.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit))
@@ -54,37 +56,39 @@ public class CharacterController : MonoBehaviour
         // Call the move funciton in the TPS
         if (AIAgent.remainingDistance > AIAgent.stoppingDistance)
         {
-            controller.Move(AIAgent.desiredVelocity, false, false);
+            TPController.Move(AIAgent.desiredVelocity, false, false);
         }
         else
         {
-            controller.Move(Vector3.zero, false, false);
+            TPController.Move(Vector3.zero, false, false);
             AIAgent.isStopped = true;
         }
 
 
         // Check for enemy targets
-        if (!anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
+        if (!Anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
         {
-            anim.SetBool("InCombat", true);
+            Anim.SetBool("InCombat", true);
             currentState = State.Combat;
         }
-        else if (anim.GetBool("InCombat") && !GetTarget()) // If in combat and there are no enemies, leave combat
+        else if (Anim.GetBool("InCombat") && !GetTarget()) // If in combat and there are no enemies, leave combat
         {
-            anim.SetBool("InCombat", false);
+            Anim.SetBool("InCombat", false);
             currentState = State.Idle;
         }
 
+
+        // Check character state
         switch (currentState)
         {
-            case State.Idle:
+            case State.Idle: // If idle, run the idle loop
                 {
                     UpdateIdle();
                     break;
                 }
-            case State.Combat:
+            case State.Combat: // If in combat, run the combat loop
                 {
-                    UpdateCombat();
+                    CController.Run(CombatTarget);
                     break;
                 }
             default:
@@ -100,45 +104,9 @@ public class CharacterController : MonoBehaviour
     void UpdateIdle()
     {
         // Idle neural network stuff
+
     }
 
-    void UpdateCombat()
-    {
-        // Combat neural network stuff
-        LookAtTarget();
-
-        //Debug moveTo
-        if (!InRange())
-        {
-            AIAgent.SetDestination(this.transform.position + this.transform.forward);
-            AIAgent.isStopped = false;
-        }
-
-        // Debug attack
-        if (Input.GetMouseButtonDown(1))
-        {
-            Attack();
-        }
-    }
-
-    // Check if the combat target is in range
-    bool InRange()
-    {
-        if (Vector3.Distance(combatTarget.transform.position, this.transform.position) > stats.range)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-
-    void Attack()
-    {
-        anim.SetInteger("AttackType", Random.Range(0, 8));
-    }
 
     // Finds nearest combat target
     bool GetTarget()
@@ -157,7 +125,7 @@ public class CharacterController : MonoBehaviour
                     if (newDistance < targetDistance)
                     {
                         targetDistance = newDistance;
-                        combatTarget = element; // Set new target
+                        CombatTarget = element; // Set new target
                     }
                 }
             }
@@ -165,11 +133,5 @@ public class CharacterController : MonoBehaviour
         }
 
         return false; // No valid target was found
-    }
-
-    // Look at the combat target
-    void LookAtTarget()
-    {
-        transform.LookAt(combatTarget.transform.position);
     }
 }
