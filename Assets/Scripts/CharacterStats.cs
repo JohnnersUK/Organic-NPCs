@@ -10,6 +10,7 @@ public class CharacterStats : MonoBehaviour
     public float stamina = 100;
 
     public float damage = 10;
+    public float range = 0.5f;
 
     [SerializeField] int iframes;
     int icount;
