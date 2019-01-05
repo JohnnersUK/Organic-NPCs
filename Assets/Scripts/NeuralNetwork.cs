@@ -185,4 +185,9 @@ public class NeuralNetwork
         }
 
     }
+
+    public float[][] GetNeurons()
+    {
+        return neurons;
+    }
 }

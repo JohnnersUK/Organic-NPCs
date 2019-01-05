@@ -4,16 +4,19 @@ using UnityEngine.AI;
 public class CombatController : MonoBehaviour
 {
     // Neural network
+    public NeuralNetwork CombatNetwork;
     public string[] Inputs;
     public int[] HiddenLayers;
     public int Outputs;
 
     // Components
-    private NeuralNetwork CombatNetwork;
     private Animator Anim;
     private NavMeshAgent AIAgent;
     private GameObject CombatTarget;
     private CharacterStats Stats;
+
+    private int output = 0;
+    private float count = 2;
 
     private void Start()
     {
@@ -23,7 +26,7 @@ public class CombatController : MonoBehaviour
         Stats = GetComponent<CharacterStats>();
 
         // Initilize the neural network
-        int length = HiddenLayers.Length + 2; 
+        int length = HiddenLayers.Length + 2;
         int[] layout = new int[length]; // Length of the NN = num of hidden layers + 2
 
         layout[0] = Inputs.Length; // First layer is the input layer
@@ -40,56 +43,72 @@ public class CombatController : MonoBehaviour
     }
 
     // Update is called once per frame
-    public void Run (GameObject target)
+    public void Run(GameObject target)
     {
+
         CombatTarget = target;
         LookAtTarget();
 
-        // Run the NN
-        float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        float[] results = CombatNetwork.Run(inputs);    // Pass them through the NN
+        count += Time.deltaTime;
 
-        // Evaluate the NN
-        int output = 0;
-        float outputTotal = -2;
-
-        for (int i = 0; i < results.Length; i++)
+        if (count > 1)
         {
-            if (results[i] > outputTotal)
+            // Run the NN
+            float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
+            float[] results = CombatNetwork.Run(inputs);    // Pass them through the NN
+
+            // Evaluate the NN
+
+            float outputTotal = -2;
+
+            for (int i = 0; i < results.Length; i++)
             {
-                output = i;
-                outputTotal = results[i];
+                if (results[i] > outputTotal)
+                {
+                    output = i;
+                    outputTotal = results[i];
+                }
             }
+
+            count = 0;
         }
 
-        switch(output)
+        switch (output)
         {
             case 0:
                 {
-                    Attack();
+                    Debug.Log("Attack");
+                    if (!InRange())
+                    {
+                        AIAgent.SetDestination(this.transform.position + this.transform.forward);
+                        AIAgent.isStopped = false;
+                    }
+                    else
+                    {
+                        AIAgent.isStopped = true;
+                        Attack();
+                    }
                     break;
                 }
-            default:
             case 1:
+                {
+                    Debug.Log("Dodge");
+                    Anim.SetInteger("Dodge", Random.Range(-1, 1));
+                    break;
+                }
             case 2:
                 {
-                    Debug.Log("nah");
+                    Debug.Log("Wait");
                     break;
                 }
         }
 
-        //Debug moveTo, not working
-        //if (!InRange())
-        //{
-        //    AIAgent.SetDestination(this.transform.position + this.transform.forward);
-        //    AIAgent.isStopped = false;
-        //}
 
         // Debug attack
-        if (Input.GetMouseButtonDown(1))
-        {
-            Attack();
-        }
+        //if (Input.GetMouseButtonDown(1))
+        //{
+        //    Attack();
+        //}
     }
 
     void Attack()
