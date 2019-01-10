@@ -8,7 +8,10 @@ public class CharacterController : MonoBehaviour
     private Animator Anim;
     private Camera MainCam;
     private CharacterStats Stats;
+
     private CombatController CController;
+    private NeedsController NController;
+
     private GameObject CombatTarget;
     private NavMeshAgent AIAgent;
     private ThirdPersonCharacter TPController;
@@ -28,7 +31,9 @@ public class CharacterController : MonoBehaviour
         TPController = GetComponent<ThirdPersonCharacter>();
         Anim = GetComponent<Animator>();
         Stats = GetComponent<CharacterStats>();
+
         CController = GetComponent<CombatController>();
+        NController = GetComponent<NeedsController>();
 
         AIAgent.updateRotation = false;
     }
@@ -98,6 +103,7 @@ public class CharacterController : MonoBehaviour
                 }
         }
 
+        NController.Run();
 
     }
 

@@ -5,9 +5,14 @@ public class CombatController : MonoBehaviour
 {
     // Neural network
     public NeuralNetwork CombatNetwork;
+
     public string[] Inputs;
+
     public int[] HiddenLayers;
     public int Outputs;
+
+    public float AttackCost;
+    public float DodgeCost;
 
     // Components
     private Animator Anim;
@@ -16,7 +21,7 @@ public class CombatController : MonoBehaviour
     private CharacterStats Stats;
 
     private int output = 0;
-    private float count = 2;
+    private float count = 0;
 
     private void Start()
     {
@@ -45,11 +50,10 @@ public class CombatController : MonoBehaviour
     // Update is called once per frame
     public void Run(GameObject target)
     {
-
         CombatTarget = target;
         LookAtTarget();
 
-        count += Time.deltaTime;
+        count += Time.deltaTime * 1;
 
         if (count > 1)
         {
@@ -70,45 +74,51 @@ public class CombatController : MonoBehaviour
                 }
             }
 
+            switch (output)
+            {
+                case 0:
+                    {
+                        Debug.Log("Attack");
+                        if (!InRange())
+                        {
+                            AIAgent.SetDestination(this.transform.position + this.transform.forward);
+                            AIAgent.isStopped = false;
+                        }
+                        else
+                        {
+
+                            if (Stats.GetStat("stamina") > 0)
+                            {
+                                AIAgent.isStopped = true;
+                                Attack();
+                                Stats.stamina -= AttackCost;
+                            }
+                        }
+                        break;
+                    }
+                case 1:
+                    {
+                        Debug.Log("Dodge");
+
+                        if (Stats.GetStat("stamina") > 0)
+                        {
+                            Anim.SetInteger("Dodge", Random.Range(-5, 5));
+                            Stats.stamina -= DodgeCost;
+                        }
+
+                        break;
+                    }
+                case 2:
+                    {
+                        Debug.Log("Wait");
+                        break;
+                    }
+            }
+
             count = 0;
         }
 
-        switch (output)
-        {
-            case 0:
-                {
-                    Debug.Log("Attack");
-                    if (!InRange())
-                    {
-                        AIAgent.SetDestination(this.transform.position + this.transform.forward);
-                        AIAgent.isStopped = false;
-                    }
-                    else
-                    {
-                        AIAgent.isStopped = true;
-                        Attack();
-                    }
-                    break;
-                }
-            case 1:
-                {
-                    Debug.Log("Dodge");
-                    Anim.SetInteger("Dodge", Random.Range(-1, 1));
-                    break;
-                }
-            case 2:
-                {
-                    Debug.Log("Wait");
-                    break;
-                }
-        }
 
-
-        // Debug attack
-        //if (Input.GetMouseButtonDown(1))
-        //{
-        //    Attack();
-        //}
     }
 
     void Attack()

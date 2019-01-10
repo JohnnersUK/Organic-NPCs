@@ -1,0 +1,207 @@
+fileFormatVersion: 2
+guid: bdcfaf53c77700e4eb9f33789bc35f22
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: ActorBodyMesh:Chest
+    100002: ActorBodyMesh:Head
+    100004: ActorBodyMesh:Hips
+    100006: ActorBodyMesh:LeftAnkle
+    100008: ActorBodyMesh:LeftArmRoll
+    100010: ActorBodyMesh:LeftCollar
+    100012: ActorBodyMesh:LeftElbow
+    100014: ActorBodyMesh:LeftFoot
+    100016: ActorBodyMesh:LeftForeArmRoll
+    100018: ActorBodyMesh:LeftHip
+    100020: ActorBodyMesh:LeftIndex1
+    100022: ActorBodyMesh:LeftIndex2
+    100024: ActorBodyMesh:LeftIndex3
+    100026: ActorBodyMesh:LeftKnee
+    100028: ActorBodyMesh:LeftLegRoll
+    100030: ActorBodyMesh:LeftMiddle1
+    100032: ActorBodyMesh:LeftMiddle2
+    100034: ActorBodyMesh:LeftMiddle3
+    100036: ActorBodyMesh:LeftRing1
+    100038: ActorBodyMesh:LeftRing2
+    100040: ActorBodyMesh:LeftRing3
+    100042: ActorBodyMesh:LeftShoulder
+    100044: ActorBodyMesh:LeftThumb1
+    100046: ActorBodyMesh:LeftThumb2
+    100048: ActorBodyMesh:LeftThumb3
+    100050: ActorBodyMesh:LeftUpLegRoll
+    100052: ActorBodyMesh:LeftWrist
+    100054: ActorBodyMesh:Neck
+    100056: ActorBodyMesh:reference
+    100058: ActorBodyMesh:RightAnkle
+    100060: ActorBodyMesh:RightArmRoll
+    100062: ActorBodyMesh:RightCollar
+    100064: ActorBodyMesh:RightElbow
+    100066: ActorBodyMesh:RightFoot
+    100068: ActorBodyMesh:RightForeArmRoll
+    100070: ActorBodyMesh:RightHip
+    100072: ActorBodyMesh:RightIndex1
+    100074: ActorBodyMesh:RightIndex2
+    100076: ActorBodyMesh:RightIndex3
+    100078: ActorBodyMesh:RightKnee
+    100080: ActorBodyMesh:RightLegRoll
+    100082: ActorBodyMesh:RightMiddle1
+    100084: ActorBodyMesh:RightMiddle2
+    100086: ActorBodyMesh:RightMiddle3
+    100088: ActorBodyMesh:RightPinky1
+    100090: ActorBodyMesh:RightPinky2
+    100092: ActorBodyMesh:RightPinky3
+    100094: ActorBodyMesh:RightRing1
+    100096: ActorBodyMesh:RightRing2
+    100098: ActorBodyMesh:RightRing3
+    100100: ActorBodyMesh:RightShoulder
+    100102: ActorBodyMesh:RightThumb1
+    100104: ActorBodyMesh:RightThumb2
+    100106: ActorBodyMesh:RightThumb3
+    100108: ActorBodyMesh:RightUpLegRoll
+    100110: ActorBodyMesh:RightWrist
+    100112: ActorBodyMesh:Waist
+    100114: //RootNode
+    100116: Tools models
+    400000: ActorBodyMesh:Chest
+    400002: ActorBodyMesh:Head
+    400004: ActorBodyMesh:Hips
+    400006: ActorBodyMesh:LeftAnkle
+    400008: ActorBodyMesh:LeftArmRoll
+    400010: ActorBodyMesh:LeftCollar
+    400012: ActorBodyMesh:LeftElbow
+    400014: ActorBodyMesh:LeftFoot
+    400016: ActorBodyMesh:LeftForeArmRoll
+    400018: ActorBodyMesh:LeftHip
+    400020: ActorBodyMesh:LeftIndex1
+    400022: ActorBodyMesh:LeftIndex2
+    400024: ActorBodyMesh:LeftIndex3
+    400026: ActorBodyMesh:LeftKnee
+    400028: ActorBodyMesh:LeftLegRoll
+    400030: ActorBodyMesh:LeftMiddle1
+    400032: ActorBodyMesh:LeftMiddle2
+    400034: ActorBodyMesh:LeftMiddle3
+    400036: ActorBodyMesh:LeftRing1
+    400038: ActorBodyMesh:LeftRing2
+    400040: ActorBodyMesh:LeftRing3
+    400042: ActorBodyMesh:LeftShoulder
+    400044: ActorBodyMesh:LeftThumb1
+    400046: ActorBodyMesh:LeftThumb2
+    400048: ActorBodyMesh:LeftThumb3
+    400050: ActorBodyMesh:LeftUpLegRoll
+    400052: ActorBodyMesh:LeftWrist
+    400054: ActorBodyMesh:Neck
+    400056: ActorBodyMesh:reference
+    400058: ActorBodyMesh:RightAnkle
+    400060: ActorBodyMesh:RightArmRoll
+    400062: ActorBodyMesh:RightCollar
+    400064: ActorBodyMesh:RightElbow
+    400066: ActorBodyMesh:RightFoot
+    400068: ActorBodyMesh:RightForeArmRoll
+    400070: ActorBodyMesh:RightHip
+    400072: ActorBodyMesh:RightIndex1
+    400074: ActorBodyMesh:RightIndex2
+    400076: ActorBodyMesh:RightIndex3
+    400078: ActorBodyMesh:RightKnee
+    400080: ActorBodyMesh:RightLegRoll
+    400082: ActorBodyMesh:RightMiddle1
+    400084: ActorBodyMesh:RightMiddle2
+    400086: ActorBodyMesh:RightMiddle3
+    400088: ActorBodyMesh:RightPinky1
+    400090: ActorBodyMesh:RightPinky2
+    400092: ActorBodyMesh:RightPinky3
+    400094: ActorBodyMesh:RightRing1
+    400096: ActorBodyMesh:RightRing2
+    400098: ActorBodyMesh:RightRing3
+    400100: ActorBodyMesh:RightShoulder
+    400102: ActorBodyMesh:RightThumb1
+    400104: ActorBodyMesh:RightThumb2
+    400106: ActorBodyMesh:RightThumb3
+    400108: ActorBodyMesh:RightUpLegRoll
+    400110: ActorBodyMesh:RightWrist
+    400112: ActorBodyMesh:Waist
+    400114: //RootNode
+    400116: Tools models
+    9500000: //RootNode
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 0.01
+    hasPreviousCalculatedGlobalScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
