@@ -165,9 +165,11 @@ public class CharacterStats : MonoBehaviour
     public void Randomize()
     {
         health = Random.Range(-100f, 100f);
-        stamina = Random.Range(-100f, 100f);
+        stamina = Random.Range(0.0f, 100f);
         damage = Random.Range(-100f, 100f);
+
         debug = Random.Range(-100f, 100f);
+
         fatigue = Random.Range(-100f, 100f);
         hunger = Random.Range(-100f, 100f);
         boredom = Random.Range(-100f, 100f);

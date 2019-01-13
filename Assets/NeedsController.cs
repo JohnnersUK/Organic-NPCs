@@ -56,20 +56,17 @@ public class NeedsController : MonoBehaviour
 
     public void Run()
     {
-        Debug.Log("Running NN");
         QueueItem currentAction;
+
         // If theres nothing in the action queue
         if (ActionQueue.Count < 1)
         {
-            Debug.Log("Getting Action");
             GetComponentInChildren<Text>().text = "Getting Action";
-
 
             GetNewAction();
         }
         else // If there is something in the queue
         {
-            Debug.Log("Processing Action");
             GetComponentInChildren<Text>().text = "Processing Action";
 
             currentAction = ActionQueue.Peek() as QueueItem;
@@ -114,22 +111,18 @@ public class NeedsController : MonoBehaviour
         {
             // Eat
             case 0:
-                Debug.Log("Eating");
                 actionTag = "Eat";
                 break;
             // Sleep
             case 1:
-                Debug.Log("Sleeping");
                 actionTag = "Sleep";
                 break;
             // Work
             case 2:
-                Debug.Log("Working");
                 actionTag = "Work";
                 break;
             // Recreational
             case 3:
-                Debug.Log("Relaxing");
                 actionTag = "Recreational";
                 break;
         }
@@ -168,9 +161,9 @@ public class NeedsController : MonoBehaviour
 
     private void MoveTo(GameObject t)
     {
-        Debug.Log("Moving to object");
         GetComponentInChildren<Text>().text = "Moving to object";
-        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.2)
+
+        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
         {
             AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
             AIAgent.isStopped = false;
@@ -184,18 +177,17 @@ public class NeedsController : MonoBehaviour
 
     private void Use(GameObject t)
     {
-        Debug.Log("Using Game Object");
-        GetComponentInChildren<Text>().text = "Using Game Object";
+        GetComponentInChildren<Text>().text = t.tag + "ing";
+
+        // Make the bot look at the object its using
+        Vector3 lookPos = t.transform.position - transform.position;
+        lookPos.y = 0;
+        Quaternion rotation = Quaternion.LookRotation(lookPos);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
 
         if (!Using)
         {
-            switch (t.tag)
-            {
-                default:
-                case "Eat":
-                    Anim.Play("Base Layer.Eat");
-                    break;
-            }
+            Anim.Play("Base Layer." + t.tag);
             Using = true;
         }
 

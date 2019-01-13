@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class CombatController : MonoBehaviour
 {
@@ -78,39 +79,45 @@ public class CombatController : MonoBehaviour
             {
                 case 0:
                     {
-                        Debug.Log("Attack");
                         if (!InRange())
                         {
+                            GetComponentInChildren<Text>().text = "Moving to target";
                             AIAgent.SetDestination(this.transform.position + this.transform.forward);
                             AIAgent.isStopped = false;
                         }
                         else
                         {
-
                             if (Stats.GetStat("stamina") > 0)
                             {
+                                GetComponentInChildren<Text>().text = "Attacking";
                                 AIAgent.isStopped = true;
                                 Attack();
                                 Stats.stamina -= AttackCost;
+                            }
+                            else
+                            {
+                                GetComponentInChildren<Text>().text = "Waiting for stamina";
                             }
                         }
                         break;
                     }
                 case 1:
                     {
-                        Debug.Log("Dodge");
-
                         if (Stats.GetStat("stamina") > 0)
                         {
+                            GetComponentInChildren<Text>().text = "Dodging";
                             Anim.SetInteger("Dodge", Random.Range(-5, 5));
                             Stats.stamina -= DodgeCost;
                         }
-
+                        else
+                        {
+                            GetComponentInChildren<Text>().text = "Waiting for stamina";
+                        }
                         break;
                     }
                 case 2:
                     {
-                        Debug.Log("Wait");
+                        GetComponentInChildren<Text>().text = "Waiting";
                         break;
                     }
             }
@@ -142,6 +149,9 @@ public class CombatController : MonoBehaviour
     // Look at the combat target
     void LookAtTarget()
     {
-        transform.LookAt(CombatTarget.transform.position);
+        Vector3 lookPos = CombatTarget.transform.position - transform.position;
+        lookPos.y = 0;
+        Quaternion rotation = Quaternion.LookRotation(lookPos);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
     }
 }

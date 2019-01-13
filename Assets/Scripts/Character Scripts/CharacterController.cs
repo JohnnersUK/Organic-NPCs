@@ -88,6 +88,7 @@ public class CharacterController : MonoBehaviour
         }
         else
         {
+            Anim.SetBool("InCombat", false);
             currentState = State.Idle;
         }
 
@@ -98,19 +99,16 @@ public class CharacterController : MonoBehaviour
         {
             case State.Idle: // If idle, run the idle loop
                 {
-                    Debug.Log("Runing Idle");
                     NController.Run();
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
                 {
-                    Debug.Log("Runing Combat");
                     CController.Run(CombatTarget);
                     break;
                 }
             default:
                 {
-                    Debug.Log("Runing Default");
                     NController.Run();
                     break;
                 }
