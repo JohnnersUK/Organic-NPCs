@@ -5,7 +5,11 @@ TagManager:
   serializedVersion: 2
   tags:
   - character
-  - Food Point
+  - Food
+  - Work
+  - Sleep
+  - Recreational
+  - Eat
   layers:
   - Default
   - TransparentFX

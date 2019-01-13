@@ -47,11 +47,15 @@ public class CharacterStats : MonoBehaviour
     private int icount;
     private bool invincible = false;
 
+    public float rTime;
+    public float rCount = 0;
+
 
     // Use this for initialization
     void Start()
     {
         icount = iframes;
+        rTime = Random.Range(10, 30);
     }
 
     // Update is called once per frame
@@ -71,7 +75,7 @@ public class CharacterStats : MonoBehaviour
         {
             stamina += Time.deltaTime * StaminaGain;
         }
-        
+
 
         // Update stats table;
         table["health"] = health;
@@ -81,15 +85,18 @@ public class CharacterStats : MonoBehaviour
         table["random"] = Random.Range(-100f, 100f);
         table["debug"] = debug;
 
+        table["fatigue"] = fatigue;
+        table["hunger"] = hunger;
+        table["social"] = social;
+        table["boredom"] = boredom;
+
         // Debug button to randomize stats
-        if (randomize == true)
+        if (randomize == true || rCount > rTime)
         {
-            health = Random.Range(-100f, 100f);
-            stamina = Random.Range(-100f, 100f);
-            damage = Random.Range(-100f, 100f);
-            debug = Random.Range(-100f, 100f);
-            randomize = false;
+            Randomize();
+            rCount = 0;
         }
+        rCount += Time.deltaTime;
 
         // Debug button to reset stats
         if (reset == true)
@@ -99,6 +106,11 @@ public class CharacterStats : MonoBehaviour
             damage = 10.0f;
             range = 1.5f;
             debug = 0.0f;
+            fatigue = 100.0f;
+            hunger = 100.0f;
+            boredom = 100.0f;
+            social = 100.0f;
+
             reset = false;
 
             GetComponent<Animator>().SetInteger("Dodge", 0);
@@ -143,10 +155,24 @@ public class CharacterStats : MonoBehaviour
 
         // If the stat being changed is stamina, 
         // and the value is less than 0
-        if(stat == "stamina" && value < 0)
+        if (stat == "stamina" && value < 0)
         {
             table["stamina"] = 0 - RechargeDelay; // Apply a stamina delay
         }
         return;
+    }
+
+    public void Randomize()
+    {
+        health = Random.Range(-100f, 100f);
+        stamina = Random.Range(-100f, 100f);
+        damage = Random.Range(-100f, 100f);
+        debug = Random.Range(-100f, 100f);
+        fatigue = Random.Range(-100f, 100f);
+        hunger = Random.Range(-100f, 100f);
+        boredom = Random.Range(-100f, 100f);
+        social = Random.Range(-100f, 100f);
+
+        randomize = false;
     }
 }

@@ -4,6 +4,8 @@ using UnityStandardAssets.Characters.ThirdPerson;
 
 public class CharacterController : MonoBehaviour
 {
+    public bool InCombat = false;
+
     // Components
     private Animator Anim;
     private Camera MainCam;
@@ -70,17 +72,25 @@ public class CharacterController : MonoBehaviour
         }
 
 
-        // Check for enemy targets
-        if (!Anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
+        if (InCombat)
         {
-            Anim.SetBool("InCombat", true);
-            currentState = State.Combat;
+            // Check for enemy targets
+            if (!Anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
+            {
+                Anim.SetBool("InCombat", true);
+                currentState = State.Combat;
+            }
+            else if (Anim.GetBool("InCombat") && !GetTarget()) // If in combat and there are no enemies, leave combat
+            {
+                Anim.SetBool("InCombat", false);
+                currentState = State.Idle;
+            }
         }
-        else if (Anim.GetBool("InCombat") && !GetTarget()) // If in combat and there are no enemies, leave combat
+        else
         {
-            Anim.SetBool("InCombat", false);
             currentState = State.Idle;
         }
+
 
 
         // Check character state
@@ -88,40 +98,34 @@ public class CharacterController : MonoBehaviour
         {
             case State.Idle: // If idle, run the idle loop
                 {
-                    UpdateIdle();
+                    Debug.Log("Runing Idle");
+                    NController.Run();
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
                 {
+                    Debug.Log("Runing Combat");
                     CController.Run(CombatTarget);
                     break;
                 }
             default:
                 {
-                    UpdateIdle();
+                    Debug.Log("Runing Default");
+                    NController.Run();
                     break;
                 }
         }
 
-        NController.Run();
-
     }
-
-    void UpdateIdle()
-    {
-        // Idle neural network stuff
-
-    }
-
 
     // Finds nearest combat target
     bool GetTarget()
     {
         float targetDistance = 1000;
         float newDistance = 0;
-        GameObject[] objects = GameObject.FindGameObjectsWithTag("character");
+        GameObject[] objects = GameObject.FindGameObjectsWithTag("Finish");
 
-        if (objects.Length > 1) // If there are any enemies (not including itself)
+        if (objects.Length > 0) // If there are any enemies (not including itself)
         {
             foreach (GameObject element in objects)
             {
