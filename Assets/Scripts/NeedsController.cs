@@ -152,10 +152,6 @@ public class NeedsController : MonoBehaviour
 
             target.GetComponent<Interactable>().Occupied = true;
         }
-        else
-        {
-            Stats.Randomize();
-        }
 
     }
 
@@ -188,6 +184,27 @@ public class NeedsController : MonoBehaviour
         if (!Using)
         {
             Anim.Play("Base Layer." + t.tag);
+            
+            switch (t.tag)
+            {
+                case "Eat":
+                    Stats.hunger += 10;
+                    NeedsNetwork.AddFitness(1);
+                    break;
+                case "Sleep":
+                    Stats.fatigue += 10;
+                    NeedsNetwork.AddFitness(1);
+                    break;
+                case "Work":
+                    Stats.boredom += 10;
+                    NeedsNetwork.AddFitness(1 * Stats.fitnessMultiplier);
+                    break;
+                case "Recreational":
+                    Stats.social += 10;
+                    NeedsNetwork.AddFitness(1);
+                    break;
+            }
+
             Using = true;
         }
 

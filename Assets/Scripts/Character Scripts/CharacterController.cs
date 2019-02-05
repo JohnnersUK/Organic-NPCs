@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.AI;
+
 using UnityStandardAssets.Characters.ThirdPerson;
 
 public class CharacterController : MonoBehaviour
 {
     public bool InCombat = false;
+    public Material dead;
 
     // Components
     private Animator Anim;
@@ -22,7 +25,8 @@ public class CharacterController : MonoBehaviour
     enum State
     {
         Idle = 0,
-        Combat = 1
+        Combat = 1,
+        Dead = 2
     }
     State currentState = State.Idle;
 
@@ -38,6 +42,9 @@ public class CharacterController : MonoBehaviour
         NController = GetComponent<NeedsController>();
 
         AIAgent.updateRotation = false;
+
+        // Randomize the needs on startup                                                                                                             
+        Stats.Randomize();
     }
 
 
@@ -71,8 +78,12 @@ public class CharacterController : MonoBehaviour
             AIAgent.isStopped = true;
         }
 
-
-        if (InCombat)
+        // Check the state
+        if (Stats.health <= 0)
+        {
+            currentState = State.Dead;
+        }
+        else if (InCombat)
         {
             // Check for enemy targets
             if (!Anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
@@ -92,9 +103,7 @@ public class CharacterController : MonoBehaviour
             currentState = State.Idle;
         }
 
-
-
-        // Check character state
+        // Run the current state
         switch (currentState)
         {
             case State.Idle: // If idle, run the idle loop
@@ -107,9 +116,16 @@ public class CharacterController : MonoBehaviour
                     CController.Run(CombatTarget);
                     break;
                 }
-            default:
+            case State.Dead:
                 {
-                    NController.Run();
+                    // Do nothing
+                    SkinnedMeshRenderer[] skin = GetComponentsInChildren<SkinnedMeshRenderer>();
+                    foreach(SkinnedMeshRenderer smr in skin)
+                    {
+                        smr.material = dead;
+                        GetComponentInChildren<Text>().text = "Dead";
+                    }
+                    enabled = false;
                     break;
                 }
         }
