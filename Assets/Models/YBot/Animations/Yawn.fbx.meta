@@ -225,6 +225,7 @@ ModelImporter:
     9500000: //RootNode
     13700000: Alpha_Joints
     13700002: Alpha_Surface
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 0
@@ -240,7 +241,8 @@ ModelImporter:
     rigImportErrors: 
     rigImportWarnings: 
     animationImportErrors: 
-    animationImportWarnings: 
+    animationImportWarnings: Event SetUsing has a time (5.300000) outside the clip's
+      valid range (0.000000..5.266667). It will never be fired
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
@@ -276,7 +278,23 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0
+        functionName: SetUsing
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: 7a45affc0676a8b42b708e03edc60d6c,
+          type: 3}
+        floatParameter: 0
+        intParameter: 1
+        messageOptions: 0
+      - time: 1
+        functionName: SetUsing
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: 7a45affc0676a8b42b708e03edc60d6c,
+          type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}

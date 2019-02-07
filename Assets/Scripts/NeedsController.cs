@@ -14,6 +14,8 @@ public class NeedsController : MonoBehaviour
     public int[] HiddenLayers;
     public int Outputs;
 
+    public Output[] Results;
+
     // Components
     private Animator Anim;
     private CharacterStats Stats;
@@ -26,7 +28,7 @@ public class NeedsController : MonoBehaviour
     private float count = 0;
     private string actionTag;
 
-    private bool Using = false;
+    public bool Using = false;
 
     private Stack ActionQueue = new Stack();
 
@@ -89,72 +91,117 @@ public class NeedsController : MonoBehaviour
 
     private void GetNewAction()
     {
+        int priority;
+
         float newDistance = 0;
         float targetDistance = 1000;
 
+        bool hasAction = false;
+
         // Run the NN
         float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        float[] results = NeedsNetwork.Run(inputs);    // Pass them through the NN
+        float[] outputs = NeedsNetwork.Run(inputs);    // Pass them through the NN
 
         // Evaluate the NN
-        float outputTotal = -2;
+        Results = new Output[outputs.Length];
 
-        for (int i = 0; i < results.Length; i++)
+        for (int i = 0; i < Results.Length; i++)
         {
-            if (results[i] > outputTotal)
+            Results[i] = new Output();
+            Results[i].ID = i;
+            Results[i].Value = outputs[i];
+        }
+
+        // Shell sort to determine priority
+        int j, inc;
+        Output temp;
+        inc = 3;
+        while (inc > 0)
+        {
+            for (int i = 0; i < Results.Length; i++)
             {
-                output = i;
-                outputTotal = results[i];
+                j = i;
+                temp = Results[i];
+                while ((j >= inc) && (Results[j - inc].Value >
+                    temp.Value))
+                {
+                    Results[j] = Results[j - inc];
+                    j = j - inc;
+                }
+                Results[j] = temp;
+            }
+            if (inc / 2 != 0)
+            {
+                inc = inc / 2;
+            }
+            else if (inc == 1)
+            {
+                inc = 0;
+            }
+            else
+            {
+                inc = 1;
             }
         }
 
-        // Set the action tag to the activity type
-        switch (output)
-        {
-            // Eat
-            case 0:
-                actionTag = "Eat";
-                break;
-            // Sleep
-            case 1:
-                actionTag = "Sleep";
-                break;
-            // Work
-            case 2:
-                actionTag = "Work";
-                break;
-            // Recreational
-            case 3:
-                actionTag = "Recreational";
-                break;
-        }
+        priority = Results.Length - 1; // Set the priority level
 
-        // Find closest object of that activity type
-
-        target = null;
-        foreach (Interactable element in objects)
+        // Find an activity
+        do
         {
-            if (element.Type == actionTag && !element.Occupied)
+            // Set the action tag to the activity type
+            switch (Results[priority].ID)
             {
-                newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
-                if (newDistance < targetDistance)
+                // Eat
+                case 0:
+                    actionTag = "Eat";
+                    break;
+                // Sleep
+                case 1:
+                    actionTag = "Sleep";
+                    break;
+                // Work
+                case 2:
+                    actionTag = "Work";
+                    break;
+                // Recreational
+                case 3:
+                    actionTag = "Recreational";
+                    break;
+            }
+
+            // Find closest object of that activity type
+            target = null;
+            foreach (Interactable element in objects)
+            {
+                if (element.Type == actionTag && !element.Occupied)
                 {
-                    targetDistance = newDistance;
-                    target = element.gameObject;
+                    newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
+                    if (newDistance < targetDistance)
+                    {
+                        targetDistance = newDistance;
+                        target = element.gameObject;
+                    }
                 }
             }
-        }
 
-        // If one exists, go use it
-        if (target)
-        {
-            // Add actions to the queue
-            ActionQueue.Push(new QueueItem("Use", target));
-            ActionQueue.Push(new QueueItem("MoveTo", target));
+            // If one exists, go use it
+            if (target)
+            {
+                // Add actions to the queue
+                ActionQueue.Push(new QueueItem("Use", target));
+                ActionQueue.Push(new QueueItem("MoveTo", target));
 
-            target.GetComponent<Interactable>().Occupied = true;
-        }
-
+                target.GetComponent<Interactable>().Occupied = true;
+                hasAction = true;
+            }
+            else // Decrease the priority level and try again
+            {
+                priority--;
+                if (priority < 0)
+                    priority = Results.Length - 1;  // Loop back around if no action is still available
+            }
+        } while (!hasAction);
     }
 
     private void MoveTo(GameObject t)
@@ -168,7 +215,6 @@ public class NeedsController : MonoBehaviour
         }
         else
         {
-            AIAgent.isStopped = true;
             ActionQueue.Pop();
         }
     }
@@ -180,10 +226,16 @@ public class NeedsController : MonoBehaviour
         // Make the bot look at the object its using
         Vector3 lookPos = t.transform.position - transform.position;
         lookPos.y = 0;
-        Quaternion rotation = Quaternion.LookRotation(lookPos);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
+        Quaternion targetRotation = Quaternion.LookRotation(lookPos);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2);
 
-        if (!Using)
+        if (Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + t.tag))
+        {
+            ActionQueue.Pop();
+            Using = false;
+            t.GetComponent<Interactable>().Occupied = false;
+        }
+        else if (!Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + t.tag))
         {
             Anim.Play("Base Layer." + t.tag);
 
@@ -206,16 +258,28 @@ public class NeedsController : MonoBehaviour
                     Stats.social += 10;
                     break;
             }
+        }
 
+    }
+
+    private void SetUsing(int u)
+    {
+        if (u == 1)
+        {
             Using = true;
         }
-
-        if (!Anim.GetBool("Using"))
-        {
-            ActionQueue.Pop();
-            Using = false;
-            t.GetComponent<Interactable>().Occupied = false;
-        }
     }
+}
+
+public class Output
+{
+    public Output()
+    {
+        ID = 0;
+        Value = 0;
+    }
+
+    public int ID;
+    public float Value;
 }
 

@@ -809,7 +809,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0045f7d3119327e428407a0629864863, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  simulationSpeed: 1
+  simulationSpeed: 10
   simulationTime: 300
   botPrefab: {fileID: 1110112973772090, guid: a381fafb8953b7f4ab2a8d6a30371ad5, type: 2}
 --- !u!4 &56799098

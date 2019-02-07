@@ -58,7 +58,7 @@ public class NeedsTrainingScript : MonoBehaviour
         count -= 1 * Time.deltaTime;
         if (count <= 0)
         {
-            // bubble sort
+            // Shell sort
             inc = 3;
             while (inc > 0)
             {

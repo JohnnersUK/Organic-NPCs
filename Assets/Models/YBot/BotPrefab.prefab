@@ -147,6 +147,7 @@ GameObject:
   - component: {fileID: 54128151951040192}
   - component: {fileID: 136107660469998374}
   - component: {fileID: 195441765850465542}
+  - component: {fileID: 208089231511987390}
   - component: {fileID: 114415583407265424}
   - component: {fileID: 114311686872391452}
   - component: {fileID: 114065078771310900}
@@ -1857,9 +1858,9 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1110112973772090}
-  m_LocalRotation: {x: -0, y: -0.9999998, z: -0, w: 0.0006567538}
-  m_LocalPosition: {x: 9.169923, y: 1.06, z: -21.345642}
-  m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4829054381127286}
   - {fileID: 4368038250795546}
@@ -1867,7 +1868,7 @@ Transform:
   - {fileID: 224167269185620798}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -179.925, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4557530920113252
 Transform:
   m_ObjectHideFlags: 1
@@ -2518,6 +2519,7 @@ MonoBehaviour:
   - health
   HiddenLayers: 04000000040000000400000004000000
   Outputs: 4
+  Using: 0
 --- !u!114 &114234752497460744
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2964,7 +2966,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1110112973772090}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.52
+  m_Radius: 0.5
   m_Speed: 1
   m_Acceleration: 8
   avoidancePriority: 50
@@ -2976,7 +2978,22 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
+--- !u!208 &208089231511987390
+NavMeshObstacle:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1110112973772090}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.5, y: 1.115, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.8, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!222 &222698824849952610
 CanvasRenderer:
   m_ObjectHideFlags: 1
