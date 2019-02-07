@@ -15,7 +15,10 @@ public class CharacterStats : MonoBehaviour
     public float hunger = 100.0f;
     public float boredom = 100.0f;
     public float social = 100.0f;
-    public float fitnessMultiplier = 1.0f;
+
+    // Emotions
+    public float happiness = 0.0f;
+    public List<float> hModifiers;
 
     public float debug = 0.0f;
 
@@ -32,7 +35,9 @@ public class CharacterStats : MonoBehaviour
         {"hunger", 100.0f},
         {"boredom", 100.0f },
         {"social", 100.0f },
-        {"fitnessMultiplier", 1.0f },
+
+        // Emotions
+        {"happiness", 0.0f },
 
         // Debug
         {"random", 0.0f},
@@ -56,6 +61,8 @@ public class CharacterStats : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        hModifiers = new List<float>();
+
         icount = iframes;
         rTime = Random.Range(10, 30);
     }
@@ -95,7 +102,11 @@ public class CharacterStats : MonoBehaviour
         }
     }
 
-    // Gets a list of stats
+    /// <summary>
+    /// Returns a list of stats
+    /// </summary>
+    /// <param name="Strings">Array of names of the stats you want returned</param>
+    /// <returns></returns>
     public float[] GetStats(string[] Strings)
     {
         float[] stats = new float[Strings.Length];
@@ -108,12 +119,21 @@ public class CharacterStats : MonoBehaviour
         return stats;
     }
 
-    // Gets a single stat
+    /// <summary>
+    /// Returns a single stat
+    /// </summary>
+    /// <param name="stat">The name of the stat you want to set</param>
+    /// <returns></returns>
     public float GetStat(string stat)
     {
         return table[stat];
     }
 
+    /// <summary>
+    /// Sets a single stat
+    /// </summary>
+    /// <param name="stat">The name of the stat you want to set</param>
+    /// <param name="value">The value to set it as</param>
     public void SetStat(string stat, float value)
     {
         table[stat] = value;
@@ -127,34 +147,21 @@ public class CharacterStats : MonoBehaviour
         return;
     }
 
-    // Updates the table of stats
+    // Updates the stats
     private void UpdateStats()
     {
-        hunger -= 1 * Time.deltaTime;
-        if (hunger <= 0)
+        // Decrease the stats over time and clap them between 0 and 100
+        hunger = Mathf.Clamp(hunger - 1 * Time.deltaTime, 0.0f, 100.0f);
+        if (hunger == 0)    // If hunger is equal to zero, lose health
         {
-            hunger = 0;
             health -= 1 * Time.deltaTime;
         }
 
-        boredom -= 1 * Time.deltaTime;
-        if (boredom <= 0)
-        {
-            boredom = 0;
-        }
+        boredom = Mathf.Clamp(boredom - 0.5f * Time.deltaTime, 0.0f, 100.0f);
+        social = Mathf.Clamp(social - 1 * Time.deltaTime, 0.0f, 100.0f);
+        fatigue = Mathf.Clamp(fatigue - 0.1f * Time.deltaTime, 0.0f, 100.0f);
 
-        social -= 1 * Time.deltaTime;
-        if (social <= 0)
-        {
-            social = 0;
-        }
-
-        fatigue -= 0.1f * Time.deltaTime;
-        if (fatigue <= 0)
-        {
-            fatigue = 0;
-        }
-
+        happiness = CalculateHappiness();
 
         table["health"] = health;
         table["stamina"] = stamina;
@@ -168,13 +175,33 @@ public class CharacterStats : MonoBehaviour
         table["social"] = social;
         table["boredom"] = boredom;
 
-        // Get fitness multiplier
-        fitnessMultiplier =
-            (table["hunger"] +
-            table["social"] +
-            table["boredom"] +
-            table["hunger"]) / 100;
-        table["fitnessMultiplier"] = fitnessMultiplier;
+        table["happiness"] = happiness;
+    }
+
+    // Calculates the bots happiness
+    public float CalculateHappiness()
+    {
+        float hSine;
+        float hAsPi;
+        float total;
+
+        float s = (social / 50) - 1;
+        float b = (boredom / 50) - 1;
+        float f = (fatigue / 50) - 1;
+
+        // Calculate the hunger multiplier as a Sine wave
+        // Where a = 2, h = 0.5, b = 1 and k = -1
+        hAsPi = Mathf.PI * (hunger / 100);
+        hSine = 2 * Mathf.Sin(hAsPi - 0.5f) - 1;
+
+        total = s + b + f + hSine;
+
+        foreach(float m in hModifiers)
+        {
+            total -= m;
+        }
+
+        return total;
     }
 
     // Randomizes the stats

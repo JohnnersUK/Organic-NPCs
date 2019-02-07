@@ -139,7 +139,7 @@ public class NeuralNetwork
         return weights;
     }
 
-   
+
     public void AddFitness(float val)
     {
         fitness += val;

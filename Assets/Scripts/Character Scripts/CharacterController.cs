@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.AI;
-
+using UnityEngine.UI;
 using UnityStandardAssets.Characters.ThirdPerson;
 
 public class CharacterController : MonoBehaviour
@@ -109,6 +108,7 @@ public class CharacterController : MonoBehaviour
             case State.Idle: // If idle, run the idle loop
                 {
                     NController.Run();
+                    NController.NeedsNetwork.AddFitness(Stats.happiness);
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
@@ -120,12 +120,16 @@ public class CharacterController : MonoBehaviour
                 {
                     // Do nothing
                     SkinnedMeshRenderer[] skin = GetComponentsInChildren<SkinnedMeshRenderer>();
-                    foreach(SkinnedMeshRenderer smr in skin)
+
+                    foreach (SkinnedMeshRenderer smr in skin)
                     {
                         smr.material = dead;
-                        GetComponentInChildren<Text>().text = "Dead";
                     }
+
+                    AIAgent.isStopped = true;
+                    GetComponentInChildren<Text>().text = "Dead";
                     enabled = false;
+
                     break;
                 }
         }

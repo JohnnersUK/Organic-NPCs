@@ -10,6 +10,7 @@ TagManager:
   - Sleep
   - Recreational
   - Eat
+  - interactables
   layers:
   - Default
   - TransparentFX

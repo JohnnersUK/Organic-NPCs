@@ -20,6 +20,7 @@ public class NeedsController : MonoBehaviour
     private NavMeshAgent AIAgent;
 
     private GameObject target;
+    private Interactable[] objects;
 
     private int output = 0;
     private float count = 0;
@@ -29,12 +30,15 @@ public class NeedsController : MonoBehaviour
 
     private Stack ActionQueue = new Stack();
 
-    private void Start()
+    public void Start()
     {
         // Get components
         Anim = GetComponent<Animator>();
         Stats = GetComponent<CharacterStats>();
         AIAgent = GetComponent<NavMeshAgent>();
+
+        GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
+        objects = interactables.GetComponentsInChildren<Interactable>();
 
         // Initilize the neural network
         int length = HiddenLayers.Length + 2;
@@ -88,8 +92,6 @@ public class NeedsController : MonoBehaviour
         float newDistance = 0;
         float targetDistance = 1000;
 
-        GameObject[] objects;
-
         // Run the NN
         float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
         float[] results = NeedsNetwork.Run(inputs);    // Pass them through the NN
@@ -128,17 +130,17 @@ public class NeedsController : MonoBehaviour
         }
 
         // Find closest object of that activity type
-        objects = GameObject.FindGameObjectsWithTag(actionTag);
+
         target = null;
-        foreach (GameObject element in objects)
+        foreach (Interactable element in objects)
         {
-            if (!element.GetComponent<Interactable>().Occupied)
+            if (element.Type == actionTag && !element.Occupied)
             {
                 newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
                 if (newDistance < targetDistance)
                 {
                     targetDistance = newDistance;
-                    target = element;
+                    target = element.gameObject;
                 }
             }
         }
@@ -184,24 +186,24 @@ public class NeedsController : MonoBehaviour
         if (!Using)
         {
             Anim.Play("Base Layer." + t.tag);
-            
+
             switch (t.tag)
             {
                 case "Eat":
                     Stats.hunger += 10;
-                    NeedsNetwork.AddFitness(1);
                     break;
                 case "Sleep":
-                    Stats.fatigue += 10;
-                    NeedsNetwork.AddFitness(1);
+                    // Reset fatigue and stamina
+                    // Clear the hapiness modifiers
+                    Stats.fatigue = 100;
+                    Stats.stamina = 100;
+                    Stats.hModifiers.Clear();
                     break;
                 case "Work":
                     Stats.boredom += 10;
-                    NeedsNetwork.AddFitness(10 * Stats.fitnessMultiplier);
                     break;
                 case "Recreational":
                     Stats.social += 10;
-                    NeedsNetwork.AddFitness(1);
                     break;
             }
 
