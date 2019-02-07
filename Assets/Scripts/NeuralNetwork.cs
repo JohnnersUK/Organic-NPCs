@@ -128,29 +128,21 @@ public class NeuralNetwork
     }
 
 
-    public bool SaveWeights()
+    public void SetWeights(float[][][] w)
     {
-        // TODO:: Write mthood of saving weights
-        return true;
+        weights = w;
     }
 
 
-    public bool LoadWeights()
+    public float[][][] GetWeights()
     {
-        // TODO:: Write method of loading in weights 
-        return true;
+        return weights;
     }
 
    
     public void AddFitness(float val)
     {
         fitness += val;
-    }
-
-
-    public void SubtractFitness(float val)
-    {
-        fitness -= val;
     }
 
 

@@ -197,7 +197,7 @@ public class NeedsController : MonoBehaviour
                     break;
                 case "Work":
                     Stats.boredom += 10;
-                    NeedsNetwork.AddFitness(1 * Stats.fitnessMultiplier);
+                    NeedsNetwork.AddFitness(10 * Stats.fitnessMultiplier);
                     break;
                 case "Recreational":
                     Stats.social += 10;

@@ -141,21 +141,18 @@ public class CharacterStats : MonoBehaviour
         if (boredom <= 0)
         {
             boredom = 0;
-            GetComponent<NeedsController>().NeedsNetwork.AddFitness(-1 * Time.deltaTime);
         }
 
         social -= 1 * Time.deltaTime;
         if (social <= 0)
         {
             social = 0;
-            GetComponent<NeedsController>().NeedsNetwork.AddFitness(-1 * Time.deltaTime);
         }
 
         fatigue -= 0.1f * Time.deltaTime;
         if (fatigue <= 0)
         {
             fatigue = 0;
-            GetComponent<NeedsController>().NeedsNetwork.AddFitness(-1 * Time.deltaTime);
         }
 
 

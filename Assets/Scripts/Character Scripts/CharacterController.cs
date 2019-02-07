@@ -44,7 +44,7 @@ public class CharacterController : MonoBehaviour
         AIAgent.updateRotation = false;
 
         // Randomize the needs on startup                                                                                                             
-        Stats.Randomize();
+        // Stats.Randomize();
     }
 
 
