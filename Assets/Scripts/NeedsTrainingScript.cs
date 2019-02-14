@@ -3,8 +3,9 @@ using UnityEngine;
 
 public class NeedsTrainingScript : MonoBehaviour
 {
-
+    [Range(1, 20)]
     public float simulationSpeed = 1.0f;
+
     public float simulationTime = 300;
 
     public GameObject botPrefab;
@@ -51,6 +52,8 @@ public class NeedsTrainingScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Time.timeScale = simulationSpeed;
+
         int i, j, k, inc;
         GameObject temp;
         List<float[][][]> tempWeights = new List<float[][][]>();

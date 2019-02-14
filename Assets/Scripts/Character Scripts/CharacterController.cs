@@ -130,6 +130,9 @@ public class CharacterController : MonoBehaviour
                     GetComponentInChildren<Text>().text = "Dead";
                     enabled = false;
 
+                    // Bots can no longer gain fitness whilst dead
+                    NController.NeedsNetwork.AddFitness(-Stats.happiness);
+
                     break;
                 }
         }

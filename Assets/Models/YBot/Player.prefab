@@ -655,7 +655,7 @@ GameObject:
   - component: {fileID: 114910967451271006}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2115,7 +2115,6 @@ MonoBehaviour:
   turnSmoothTime: 0.2
   speedSmoothTime: 0.1
   target: {fileID: 0}
-  playerColour: {r: 1, g: 0, b: 0, a: 1}
 --- !u!137 &137146305476229000
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1
