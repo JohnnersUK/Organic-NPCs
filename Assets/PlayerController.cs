@@ -14,7 +14,6 @@ public class PlayerController : MonoBehaviour
     public float speedSmoothTime = 0.1f;
 
     public GameObject target;
-    public Color playerColour;
 
     // Private
     private bool inCombat = false;
@@ -42,14 +41,6 @@ public class PlayerController : MonoBehaviour
         camT = Camera.main.transform;
         cc = GetComponent<UnityEngine.CharacterController>();
         target = null;
-
-        foreach (SkinnedMeshRenderer smr in GetComponentsInChildren<SkinnedMeshRenderer>())
-        {
-            if (smr.material.color == new Color(0.09657001f, 0.4216198f, 0.522f, 1))
-            {
-                smr.material.color = playerColour;
-            }
-        }
     }
 
     void Update()
