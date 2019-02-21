@@ -5,22 +5,48 @@ public class CharacterStats : MonoBehaviour
 {
     // Stats
     /// Combat
-    public float health = 100.0f;
-    public float stamina = 100.0f;
+    [Header("Health Settings:")]
+    public float health;
+    public float maxHealth;
+
+
+    [Header("Stamina Settings:")]
+    public float stamina;
+    public float maxStamina;
+    public float staminaGain;
+    public float maxRechargeDelay;
+    public float rechargeDelay = 0;
+
     public float damage = 10.0f;
     public float range = 1.5f;
 
     // Needs
+    [Header("Needs:")]
     public float fatigue = 100.0f;
     public float hunger = 100.0f;
     public float boredom = 100.0f;
     public float social = 100.0f;
 
     // Emotions
+    [Header("Emotions:")]
     public float happiness = 0.0f;
+    public float anger = 0.0f;
     public List<float> hModifiers;
 
+    [Header("Debug:")]
+    public bool randomize = false;
+    public bool reset = false;
+
+    [Space(10, order = 0)]
     public float debug = 0.0f;
+    
+
+    [SerializeField] private float iframes = 30;
+    [SerializeField] private float icount;
+    [SerializeField] private bool invincible = false;
+
+    public float rTime;
+    public float rCount = 0;
 
     public IDictionary<string, float> table = new Dictionary<string, float>()
     {
@@ -38,25 +64,12 @@ public class CharacterStats : MonoBehaviour
 
         // Emotions
         {"happiness", 0.0f },
+        {"Anger", 0.0f},
 
         // Debug
         {"random", 0.0f},
         {"debug", 0.0f }
     };
-
-    public bool randomize = false;
-    public bool reset = false;
-
-    public float StaminaGain;
-    public float RechargeDelay;
-
-    [SerializeField] private int iframes = 30;
-    private int icount;
-    private bool invincible = false;
-
-    public float rTime;
-    public float rCount = 0;
-
 
     // Use this for initialization
     void Start()
@@ -65,6 +78,9 @@ public class CharacterStats : MonoBehaviour
 
         icount = iframes;
         rTime = Random.Range(10, 30);
+
+        health = maxHealth;
+        stamina = maxStamina;
     }
 
     // Update is called once per frame
@@ -72,17 +88,12 @@ public class CharacterStats : MonoBehaviour
     {
         if (invincible)
         {
-            icount -= 1;
-            if (icount < 1)
+            icount -= 1 * Time.deltaTime;
+            if (icount <= 0)
             {
                 invincible = false;
                 icount = iframes;
             }
-        }
-
-        if (stamina < 100)
-        {
-            stamina += Time.deltaTime * StaminaGain;
         }
 
         // Update stats table;
@@ -93,12 +104,12 @@ public class CharacterStats : MonoBehaviour
     {
         if (!invincible)
         {
-            table["health"] -= dmg;
-            //Debug.Log(table["health"]);
-            table["stamina"] -= dmg / 2;
-
-            GetComponent<Animator>().SetInteger("HitType", Random.Range(0, 5));
+            health -= dmg;
+            stamina -= dmg / 2;
             invincible = true;
+
+            hModifiers.Add(-0.5f);
+            anger += 10;
         }
     }
 
@@ -137,19 +148,13 @@ public class CharacterStats : MonoBehaviour
     public void SetStat(string stat, float value)
     {
         table[stat] = value;
-
-        // If the stat being changed is stamina, 
-        // and the value is less than 0
-        if (stat == "stamina" && value < 0)
-        {
-            table["stamina"] = 0 - RechargeDelay; // Apply a stamina delay
-        }
         return;
     }
 
     // Updates the stats
     private void UpdateStats()
     {
+        // Stats
         // Decrease the stats over time and clap them between 0 and 100
         hunger = Mathf.Clamp(hunger - 1 * Time.deltaTime, 0.0f, 100.0f);
         if (hunger == 0)    // If hunger is equal to zero, lose health
@@ -162,6 +167,39 @@ public class CharacterStats : MonoBehaviour
         fatigue = Mathf.Clamp(fatigue - 0.1f * Time.deltaTime, 0.0f, 100.0f);
 
         happiness = CalculateHappiness();
+        anger = ((anger <= 0) ? 0 : anger - Time.deltaTime * 0.1f);
+
+        // Stamina
+        if (rechargeDelay > 0)
+        {
+            rechargeDelay -= Time.deltaTime;
+            if (rechargeDelay <= 0)
+            {
+                rechargeDelay = 0;
+
+                if (stamina <= 0)
+                {
+                    stamina = 1;
+                    table["stamina"] = 1;
+                }
+
+            }
+        }
+
+        // If stamina hasn't been modified
+        if (stamina == table["stamina"])
+        {
+            // Recharge stamina
+            if (rechargeDelay == 0)
+                stamina = ((stamina < maxStamina) ? stamina + staminaGain * Time.deltaTime : maxStamina);
+        }
+        else // If stamina has been modified
+        {
+            if (stamina > 0)
+                rechargeDelay = maxRechargeDelay / 4;
+            else
+                rechargeDelay = maxRechargeDelay;
+        }
 
         table["health"] = health;
         table["stamina"] = stamina;
@@ -176,6 +214,7 @@ public class CharacterStats : MonoBehaviour
         table["boredom"] = boredom;
 
         table["happiness"] = happiness;
+        table["anger"] = anger;
     }
 
     // Calculates the bots happiness
@@ -185,6 +224,7 @@ public class CharacterStats : MonoBehaviour
         float hAsPi;
         float total;
 
+        // Get the stats as a percentage between -1 and 1
         float s = (social / 50) - 1;
         float b = (boredom / 50) - 1;
         float f = (fatigue / 50) - 1;

@@ -45,7 +45,7 @@ public class AttackCollider : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "character" && (other.name != player.name))
+        if ((other.tag == "character" || other.tag == "Player") && other.name != player.name)
         {
             other.GetComponent<CharacterStats>().GetHit(stats.table["damage"]);
             col.enabled = false;

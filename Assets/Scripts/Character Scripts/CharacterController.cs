@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 using UnityStandardAssets.Characters.ThirdPerson;
@@ -144,9 +147,11 @@ public class CharacterController : MonoBehaviour
     {
         float targetDistance = 1000;
         float newDistance = 0;
-        GameObject[] objects = GameObject.FindGameObjectsWithTag("Finish");
+        List<GameObject> objects = new List<GameObject>();
+        objects.AddRange(GameObject.FindGameObjectsWithTag("character"));
+        objects.AddRange(GameObject.FindGameObjectsWithTag("Player"));
 
-        if (objects.Length > 0) // If there are any enemies (not including itself)
+        if (objects.Count > 0) // If there are any enemies (not including itself)
         {
             foreach (GameObject element in objects)
             {
