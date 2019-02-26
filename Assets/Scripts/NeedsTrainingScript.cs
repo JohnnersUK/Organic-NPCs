@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class NeedsTrainingScript : MonoBehaviour
 {
+    public int simultaionNum;
+
+    //public GameObject hsTable;
+
     [Range(1, 20)]
     public float simulationSpeed = 1.0f;
 
@@ -13,6 +17,8 @@ public class NeedsTrainingScript : MonoBehaviour
     private Transform[] spawnPoints;
     private GameObject[] bots;
 
+    public List<GameObject> highScores;
+
     private Interactable[] objects;
 
     private float count;
@@ -22,8 +28,11 @@ public class NeedsTrainingScript : MonoBehaviour
     {
         int i = 0;
 
+        simultaionNum = 1;
+
         GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
         objects = interactables.GetComponentsInChildren<Interactable>();
+        highScores = new List<GameObject>();
 
         count = simulationTime;
 
@@ -35,6 +44,7 @@ public class NeedsTrainingScript : MonoBehaviour
         foreach (Transform T in spawnPoints)
         {
             bots[i] = Instantiate(botPrefab, T.position, T.rotation);
+            highScores.Add(bots[i]);
 
             // name and color the bot to make it identifiable
             bots[i].name = "bot " + i;
@@ -91,6 +101,9 @@ public class NeedsTrainingScript : MonoBehaviour
                 }
             }
 
+            UpdateHighScores();
+
+            Debug.Log("Results:");
             // print and store the fitness, then destroy the bots
             for (k = 0; k < bots.Length; k++)
             {
@@ -103,6 +116,8 @@ public class NeedsTrainingScript : MonoBehaviour
 
                 Destroy(bots[k]);
             }
+
+
 
             // Create a new set of mutated bots using the top 5 previous fitnesses
             for (k = 0; k < spawnPoints.Length; k++)
@@ -131,6 +146,60 @@ public class NeedsTrainingScript : MonoBehaviour
             }
 
             count = simulationTime;
+            simultaionNum++;
+
+            Debug.Log("Begining simulation " + simultaionNum);
         }
     }
+
+    void UpdateHighScores()
+    {
+        List<GameObject> tempTable = new List<GameObject>();
+        tempTable.AddRange(highScores);
+        tempTable.AddRange(bots);
+
+        int i, j, k, inc;
+        GameObject temp;
+
+        count -= 1 * Time.deltaTime;
+        if (count <= 0)
+        {
+            // Shell sort
+            inc = 3;
+            while (inc > 0)
+            {
+                for (i = 0; i < tempTable.Count; i++)
+                {
+                    j = i;
+                    temp = tempTable[i];
+                    while ((j >= inc) && (tempTable[j - inc].GetComponent<NeedsController>().NeedsNetwork.GetFitness() >
+                        temp.GetComponent<NeedsController>().NeedsNetwork.GetFitness()))
+                    {
+                        tempTable[j] = tempTable[j - inc];
+                        j = j - inc;
+                    }
+                    tempTable[j] = temp;
+                }
+                if (inc / 2 != 0)
+                {
+                    inc = inc / 2;
+                }
+                else if (inc == 1)
+                {
+                    inc = 0;
+                }
+                else
+                {
+                    inc = 1;
+                }
+            }
+        }
+
+        for (i = 0; i < 10; i++)
+        {
+            highScores[i] = tempTable[tempTable.Count - (i+1)];
+        }
+
+    }
+
 }

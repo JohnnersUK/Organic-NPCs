@@ -111,7 +111,6 @@ public class CharacterController : MonoBehaviour
             case State.Idle: // If idle, run the idle loop
                 {
                     NController.Run();
-                    NController.NeedsNetwork.AddFitness(Stats.happiness);
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
@@ -140,6 +139,7 @@ public class CharacterController : MonoBehaviour
                 }
         }
 
+        NController.NeedsNetwork.AddFitness(Stats.happiness * Time.deltaTime);
     }
 
     // Finds nearest combat target

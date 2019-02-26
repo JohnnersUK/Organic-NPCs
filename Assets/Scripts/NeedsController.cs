@@ -242,7 +242,7 @@ public class NeedsController : MonoBehaviour
             switch (t.tag)
             {
                 case "Eat":
-                    Stats.hunger += 10;
+                    Stats.hunger += 30;
                     break;
                 case "Sleep":
                     // Reset fatigue and stamina
@@ -252,10 +252,10 @@ public class NeedsController : MonoBehaviour
                     Stats.hModifiers.Clear();
                     break;
                 case "Work":
-                    Stats.boredom += 10;
+                    Stats.boredom += 30;
                     break;
                 case "Recreational":
-                    Stats.social += 10;
+                    Stats.social += 40;
                     break;
             }
         }

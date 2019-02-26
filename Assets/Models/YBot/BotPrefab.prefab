@@ -2535,7 +2535,6 @@ MonoBehaviour:
   - health
   - stamina
   - damage
-  - debug
   HiddenLayers: 030000000300000003000000
   Outputs: 3
   AttackCost: 10
