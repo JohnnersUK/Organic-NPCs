@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class NeuralNetwork
+public class NeuralNetwork : IComparable<NeuralNetwork>
 {
     private int[] layers;
     private float[][] neurons;
@@ -127,6 +127,14 @@ public class NeuralNetwork
         }
     }
 
+    public int CompareTo(NeuralNetwork other)
+    {
+        if (other == null) return 1;
+        else
+        {
+            return this.GetFitness().CompareTo(other.GetFitness());
+        }
+    }
 
     public void SetWeights(float[][][] w)
     {

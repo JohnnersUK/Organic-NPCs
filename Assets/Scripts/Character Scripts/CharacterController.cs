@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -23,6 +22,14 @@ public class CharacterController : MonoBehaviour
     private NavMeshAgent AIAgent;
     private ThirdPersonCharacter TPController;
 
+    // Neural network
+    public NeuralNetwork MasterNetwork;
+
+    public string[] Inputs;
+    public int[] HiddenLayers;
+    public int Outputs;
+
+    public List<Output> Results;
 
     enum State
     {
@@ -32,7 +39,7 @@ public class CharacterController : MonoBehaviour
     }
     State currentState = State.Idle;
 
-    private void Start()
+    public void Start()
     {
         MainCam = Camera.main;
         AIAgent = GetComponent<NavMeshAgent>();
@@ -45,29 +52,26 @@ public class CharacterController : MonoBehaviour
 
         AIAgent.updateRotation = false;
 
-        // Randomize the needs on startup                                                                                                             
-        // Stats.Randomize();
+        // Initilize the neural network
+        int length = HiddenLayers.Length + 2;
+        int[] layout = new int[length];                 // Length of the NN = num of hidden layers + 2
+
+        layout[0] = Inputs.Length;                      // First layer is the input layer
+
+        // Initilize the hidden layer
+        for (int i = 0; i < HiddenLayers.Length; i++)   // For each hidden layer
+        {
+            layout[i + 1] = HiddenLayers[i];            // Set the number of nodes
+        }
+
+        layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
+
+        MasterNetwork = new NeuralNetwork(layout);       // Construct the NN
     }
 
 
     void Update()
     {
-        // When lmb is clicked draw a line from the camera 
-        // through the view matrix, set the collision point 
-        // as target destination for the AI agent
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = MainCam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit))
-            {
-                AIAgent.SetDestination(hit.point);
-                AIAgent.isStopped = false;
-                Debug.Log(hit.point);
-            }
-        }
-
         // If the AI Agent isn't at its target position, 
         // Call the move funciton in the TPS
         if (AIAgent.remainingDistance > AIAgent.stoppingDistance)
@@ -81,41 +85,39 @@ public class CharacterController : MonoBehaviour
         }
 
         // Check the state
-        if (Stats.health <= 0)
+        // Run the NN
+        float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
+        float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
+
+        // Evaluate the NN
+        Results = new List<Output>();                       // Create the list of results
+        for (int i = 0; i < Outputs; i++)
         {
-            currentState = State.Dead;
+            Output t = new Output();
+            t.ID = i;
+            t.Value = _outputs[i];
+            Results.Add(t);
         }
-        else if (InCombat)
-        {
-            // Check for enemy targets
-            if (!Anim.GetBool("InCombat") && GetTarget()) // If not in combat and enemy detected, get in combat
-            {
-                Anim.SetBool("InCombat", true);
-                currentState = State.Combat;
-            }
-            else if (Anim.GetBool("InCombat") && !GetTarget()) // If in combat and there are no enemies, leave combat
-            {
-                Anim.SetBool("InCombat", false);
-                currentState = State.Idle;
-            }
-        }
-        else
-        {
-            Anim.SetBool("InCombat", false);
-            currentState = State.Idle;
-        }
+        Results.Sort();                                     // Sort the list of results
+
+        currentState = (State)Results[Results.Count-1].ID;  // Set the result
 
         // Run the current state
         switch (currentState)
         {
             case State.Idle: // If idle, run the idle loop
                 {
+                    if (Anim.GetBool("InCombat"))
+                        Anim.SetBool("InCombat", false);
                     NController.Run();
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
                 {
-                    CController.Run(CombatTarget);
+                    if (!Anim.GetBool("InCombat"))
+                        Anim.SetBool("InCombat", true);
+                    if (GetTarget())
+                        CController.Run(CombatTarget);
                     break;
                 }
             case State.Dead:

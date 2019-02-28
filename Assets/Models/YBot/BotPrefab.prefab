@@ -2499,6 +2499,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InCombat: 0
   dead: {fileID: 2100000, guid: ee9b4d3241ecc0c498577431cf222c23, type: 2}
+  Inputs:
+  - happiness
+  - anger
+  HiddenLayers: 0200000002000000
+  Outputs: 2
 --- !u!114 &114159856779782752
 MonoBehaviour:
   m_ObjectHideFlags: 1

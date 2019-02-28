@@ -25,6 +25,8 @@ public class NeedsController : MonoBehaviour
     private Interactable[] objects;
 
     private int output = 0;
+    private float[] _outputs;
+
     private float count = 0;
     private string actionTag;
 
@@ -44,19 +46,26 @@ public class NeedsController : MonoBehaviour
 
         // Initilize the neural network
         int length = HiddenLayers.Length + 2;
-        int[] layout = new int[length]; // Length of the NN = num of hidden layers + 2
+        int[] layout = new int[length];                 // Length of the NN = num of hidden layers + 2
 
-        layout[0] = Inputs.Length; // First layer is the input layer
+        layout[0] = Inputs.Length;                      // First layer is the input layer
 
         // Initilize the hidden layer
-        for (int i = 0; i < HiddenLayers.Length; i++) // For each hidden layer
+        for (int i = 0; i < HiddenLayers.Length; i++)   // For each hidden layer
         {
-            layout[i + 1] = HiddenLayers[i]; // Set the number of nodes
+            layout[i + 1] = HiddenLayers[i];            // Set the number of nodes
         }
 
-        layout[layout.Length - 1] = Outputs; // Last layer is the output layer
+        layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
 
-        NeedsNetwork = new NeuralNetwork(layout); // Construct the NN
+        NeedsNetwork = new NeuralNetwork(layout);       // Construct the NN
+    }
+
+    public void Update()
+    {
+        // Run the NN
+        float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
+        _outputs = NeedsNetwork.Run(inputs);             // Pass them through the NN
     }
 
 
@@ -98,18 +107,15 @@ public class NeedsController : MonoBehaviour
 
         bool hasAction = false;
 
-        // Run the NN
-        float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        float[] outputs = NeedsNetwork.Run(inputs);    // Pass them through the NN
-
         // Evaluate the NN
-        Results = new Output[outputs.Length];
+        Update();
+        Results = new Output[_outputs.Length];
 
         for (int i = 0; i < Results.Length; i++)
         {
             Results[i] = new Output();
             Results[i].ID = i;
-            Results[i].Value = outputs[i];
+            Results[i].Value = _outputs[i];
         }
 
         // Shell sort to determine priority
@@ -270,16 +276,3 @@ public class NeedsController : MonoBehaviour
         }
     }
 }
-
-public class Output
-{
-    public Output()
-    {
-        ID = 0;
-        Value = 0;
-    }
-
-    public int ID;
-    public float Value;
-}
-

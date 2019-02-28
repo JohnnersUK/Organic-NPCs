@@ -24,7 +24,7 @@ public class CombatController : MonoBehaviour
     private int output = 0;
     private float count = 0;
 
-    private void Start()
+    public void Start()
     {
         // Get components
         Anim = GetComponent<Animator>();
@@ -48,7 +48,7 @@ public class CombatController : MonoBehaviour
         CombatNetwork = new NeuralNetwork(layout); // Construct the NN
     }
 
-    // Update is called once per frame
+
     public void Run(GameObject target)
     {
         CombatTarget = target;
