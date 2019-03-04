@@ -132,7 +132,7 @@ public class NetworkTrainingScript : MonoBehaviour
         if (saveWeights)
         {
             string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
-            SerializeObject<NeuralNetwork>(filePath, networks[networks.Count-1]);
+            NetworkIO.instance.SerializeObject<NeuralNetwork>(filePath, networks[networks.Count-1]);
 
             saveWeights = false;
 
@@ -221,25 +221,5 @@ public class NetworkTrainingScript : MonoBehaviour
         simultaionNum++;
 
         Debug.Log("Begining simulation " + simultaionNum);
-    }
-
-    // Save a network as a binary file
-    public void SerializeObject<T>(string filename, T obj)
-    {
-        Stream stream = File.Open(filename, FileMode.Create);
-        BinaryFormatter binaryFormatter = new BinaryFormatter();
-        binaryFormatter.Serialize(stream, obj);
-        stream.Close();
-    }
-
-    // Load a network from a binary file
-    public T DeSerializeObject<T>(string filename)
-    {
-        T objectToBeDeSerialized;
-        Stream stream = File.Open(filename, FileMode.Open);
-        BinaryFormatter binaryFormatter = new BinaryFormatter();
-        objectToBeDeSerialized = (T)binaryFormatter.Deserialize(stream);
-        stream.Close();
-        return objectToBeDeSerialized;
     }
 }

@@ -15,8 +15,6 @@ public class NetworkIO : MonoBehaviour
             instance = this;
         else if (instance != this)
             Destroy(gameObject);
-
-        DontDestroyOnLoad(gameObject);
     }
 
     // Save a network as a binary file
