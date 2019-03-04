@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -66,7 +67,18 @@ public class CharacterController : MonoBehaviour
 
         layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
 
-        MasterNetwork = new NeuralNetwork(layout);       // Construct the NN
+        string filePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
+        if (File.Exists(filePath))
+        {
+            Debug.Log("Loading in MasterNetwork from file: " + filePath);
+            MasterNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
+            Debug.Log("Loading complete");
+        }
+        else
+        {
+            Debug.Log("Generating new MasterNetwork");
+            MasterNetwork = new NeuralNetwork(layout);       // Construct the NN
+        }
     }
 
 
@@ -74,34 +86,37 @@ public class CharacterController : MonoBehaviour
     {
         // If the AI Agent isn't at its target position, 
         // Call the move funciton in the TPS
-        if (AIAgent.remainingDistance > AIAgent.stoppingDistance)
+        if (AIAgent.isOnNavMesh)
         {
-            TPController.Move(AIAgent.desiredVelocity, false, false);
-        }
-        else
-        {
-            TPController.Move(Vector3.zero, false, false);
-            AIAgent.isStopped = true;
+            if (AIAgent.remainingDistance > AIAgent.stoppingDistance)
+            {
+                TPController.Move(AIAgent.desiredVelocity, false, false);
+            }
+            else
+            {
+                TPController.Move(Vector3.zero, false, false);
+                AIAgent.isStopped = true;
+            }
         }
 
         // Check the state
         // Run the NN
-        float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
-        float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
+        //float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
+        //float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
 
-        // Evaluate the NN
-        Results = new List<Output>();                       // Create the list of results
-        for (int i = 0; i < Outputs; i++)
-        {
-            Output t = new Output();
-            t.ID = i;
-            t.Value = _outputs[i];
-            Results.Add(t);
-        }
-        Results.Sort();                                     // Sort the list of results
+        //// Evaluate the NN
+        //Results = new List<Output>();                       // Create the list of results
+        //for (int i = 0; i < Outputs; i++)
+        //{
+        //    Output t = new Output();
+        //    t.ID = i;
+        //    t.Value = _outputs[i];
+        //    Results.Add(t);
+        //}
+        //Results.Sort();                                     // Sort the list of results
 
-        currentState = (State)Results[Results.Count-1].ID;  // Set the result
-
+        //currentState = (State)Results[Results.Count-1].ID;  // Set the result
+        currentState = State.Idle;
         // Run the current state
         switch (currentState)
         {

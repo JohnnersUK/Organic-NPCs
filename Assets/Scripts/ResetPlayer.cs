@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class ResetPlayer : MonoBehaviour
 {
-    public GameObject player;
-    public bool reset;
+    [Header("Reset:")]
+    public bool resetPlayer;
 
+    [Header("Player Setup:")]
+    public GameObject player;
     public GameObject playerPrefab;
     public Transform spawn;
 
@@ -18,13 +20,13 @@ public class ResetPlayer : MonoBehaviour
 
     void Update ()
     {
-		if (reset)
+		if (resetPlayer)
         {
             Destroy(player);
             player = null;
 
             player = Instantiate(playerPrefab, spawn.position, spawn.rotation);
-            reset = false;
+            resetPlayer = false;
         }
 
 	}

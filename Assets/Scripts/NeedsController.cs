@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -58,7 +59,18 @@ public class NeedsController : MonoBehaviour
 
         layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
 
-        NeedsNetwork = new NeuralNetwork(layout);       // Construct the NN
+        string filePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
+        if (File.Exists(filePath))
+        {
+            Debug.Log("Loading in NeedsNetwork from file: " + filePath);
+            NeedsNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
+            Debug.Log("Loading complete");
+        }
+        else
+        {
+            Debug.Log("Generating new NeedsNetwork");
+            NeedsNetwork = new NeuralNetwork(layout);       // Construct the NN
+        }
     }
 
     public void Update()
@@ -216,8 +228,11 @@ public class NeedsController : MonoBehaviour
 
         if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
         {
-            AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
-            AIAgent.isStopped = false;
+            if (AIAgent.isOnNavMesh)
+            {
+                AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
+                AIAgent.isStopped = false;
+            }
         }
         else
         {

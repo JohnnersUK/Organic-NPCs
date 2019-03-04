@@ -2499,6 +2499,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InCombat: 0
   dead: {fileID: 2100000, guid: ee9b4d3241ecc0c498577431cf222c23, type: 2}
+  MasterNetwork:
+    fitness: 0
   Inputs:
   - happiness
   - anger
@@ -2515,6 +2517,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a45affc0676a8b42b708e03edc60d6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NeedsNetwork:
+    fitness: 0
   Inputs:
   - hunger
   - boredom
@@ -2536,6 +2540,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c75348f9a6fb98d4ba126ba9de715589, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CombatNetwork:
+    fitness: 0
   Inputs:
   - health
   - stamina

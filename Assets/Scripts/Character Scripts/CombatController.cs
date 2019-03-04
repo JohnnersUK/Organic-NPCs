@@ -2,6 +2,9 @@
 using UnityEngine.AI;
 using UnityEngine.UI;
 
+using System.IO;
+
+
 public class CombatController : MonoBehaviour
 {
     // Neural network
@@ -45,7 +48,18 @@ public class CombatController : MonoBehaviour
 
         layout[layout.Length - 1] = Outputs; // Last layer is the output layer
 
-        CombatNetwork = new NeuralNetwork(layout); // Construct the NN
+        string filePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
+        if (File.Exists(filePath))
+        {
+            Debug.Log("Loading in CombatNetwork from file: " + filePath);
+            CombatNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
+            Debug.Log("Loading complete");
+        }
+        else
+        {
+            Debug.Log("Generating new CombatNetwork");
+            CombatNetwork = new NeuralNetwork(layout);       // Construct the NN
+        }
     }
 
 
@@ -82,15 +96,24 @@ public class CombatController : MonoBehaviour
                         if (!InRange())
                         {
                             GetComponentInChildren<Text>().text = "Moving to target";
-                            AIAgent.SetDestination(this.transform.position + this.transform.forward);
-                            AIAgent.isStopped = false;
+
+                            if(AIAgent.isOnNavMesh)
+                            {
+                                AIAgent.SetDestination(this.transform.position + this.transform.forward);
+                                AIAgent.isStopped = false;
+                            }
                         }
                         else
                         {
                             if (Stats.GetStat("stamina") > 0)
                             {
                                 GetComponentInChildren<Text>().text = "Attacking";
-                                AIAgent.isStopped = true;
+
+                                if (AIAgent.isOnNavMesh)
+                                {
+                                    AIAgent.isStopped = true;
+                                }
+
                                 Attack();
                                 Stats.stamina -= AttackCost;
                             }

@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 
 using UnityEngine;
 
-
+[Serializable]
 public class NeuralNetwork : IComparable<NeuralNetwork>
 {
     private int[] layers;
     private float[][] neurons;
     private float[][][] weights;
 
-    public float fitness; //fitness of the network
+    public float fitness; 
 
 
     // Initilize a new network

@@ -252,12 +252,27 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: Motion
-    rigImportErrors: "Copied Avatar Rig Configuration mis-match. Transform hierarchy
-      does not match:\n\tTransform 'Hips' for human bone 'Hips' not found\n"
+    rigImportErrors: 
     rigImportWarnings: 
     animationImportErrors: 
-    animationImportWarnings: 
-    animationRetargetingWarnings: 
+    animationImportWarnings: "\nClip 'Take 001' has import animation warnings that
+      might lower retargeting quality:\nNote: Activate translation DOF on avatar to
+      improve retargeting quality.\n\t'B_Spine' has translation animation that will
+      be discarded.\n"
+    animationRetargetingWarnings: "\nRetargeting quality report for clip 'Take 001':\n\tLeftLowerLeg
+      average position error 0.3 mm and maximum position error 2.0 mm at time 0:12
+      (50.0%) Frame 12\n\tRightLowerLeg average position error 0.2 mm and maximum
+      position error 2.7 mm at time 0: 5 (20.8%) Frame 5\n\tLeftUpperArm average position
+      error 13.2 mm and maximum position error 21.5 mm at time 0:12 (50.0%) Frame
+      12\n\tLeftLowerArm average position error 13.3 mm and maximum position error
+      21.5 mm at time 0:12 (50.0%) Frame 12\n\tLeftHand average position error 13.2
+      mm and maximum position error 21.5 mm at time 0:12 (50.0%) Frame 12\n\tRightUpperArm
+      average position error 13.2 mm and maximum position error 21.5 mm at time 0:12
+      (50.0%) Frame 12\n\tRightLowerArm average position error 13.3 mm and maximum
+      position error 21.6 mm at time 0:12 (50.0%) Frame 12\n\tRightHand average position
+      error 13.2 mm and maximum position error 21.5 mm at time 0:12 (50.0%) Frame
+      12\n\tHead average position error 13.2 mm and maximum position error 21.5 mm
+      at time 0:12 (50.0%) Frame 12\n"
     animationDoRetargetingWarnings: 1
     importAnimatedCustomProperties: 0
     importConstraints: 0
@@ -292,21 +307,7 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events:
-      - time: 0
-        functionName: FootR
-        data: 
-        objectReferenceParameter: {instanceID: 0}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 0.44616
-        functionName: FootL
-        data: 
-        objectReferenceParameter: {instanceID: 0}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
+      events: []
       transformMask:
       - path: 
         weight: 1
