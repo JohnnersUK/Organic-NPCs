@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 public class AttackCollider : MonoBehaviour {
@@ -10,8 +12,11 @@ public class AttackCollider : MonoBehaviour {
     [SerializeField] GameObject player;
     SphereCollider col;
 
-	// Use this for initialization
-	void Start ()
+    public delegate void HitEventHandler(object source, PublicEventArgs args);
+    public event HitEventHandler HitEvent;
+
+    // Use this for initialization
+    void Start ()
     {
         col = GetComponent<SphereCollider>();
 
@@ -45,9 +50,19 @@ public class AttackCollider : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        if ((other.tag == "character" || other.tag == "Player") && other.name != player.name)
+        if ((other.tag == "character" || other.tag == "Player") && other.name != GetComponent<Collider>().transform.root.name)
         {
-            other.GetComponent<CharacterStats>().GetHit(stats.table["damage"]);
+            other.GetComponent<CharacterStats>().GetHit(this.gameObject, stats.table["damage"]);
+            OnHitEvent(other);
+        }
+    }
+
+    protected virtual void OnHitEvent(Collider other)
+    {
+        if (HitEvent != null)
+        {
+            PublicEventArgs args = new PublicEventArgs(GetComponent<Collider>().transform.root.gameObject, other.transform.root.gameObject, EventType.Hit, 10);
+            HitEvent(this, args);
         }
     }
 }

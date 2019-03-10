@@ -11,6 +11,10 @@ public class CharacterController : MonoBehaviour
     public bool InCombat = false;
     public Material dead;
 
+    // Interactions
+    private float interactionCount = 0.0f;
+    private Transform interactPoint;
+
     // Components
     private Animator Anim;
     private Camera MainCam;
@@ -22,6 +26,8 @@ public class CharacterController : MonoBehaviour
     private GameObject CombatTarget;
     private NavMeshAgent AIAgent;
     private ThirdPersonCharacter TPController;
+
+    private EventManager em;
 
     // Neural network
     public NeuralNetwork MasterNetwork;
@@ -51,6 +57,8 @@ public class CharacterController : MonoBehaviour
         CController = GetComponent<CombatController>();
         NController = GetComponent<NeedsController>();
 
+        em = GameObject.Find("EventManager").GetComponent<EventManager>();
+
         AIAgent.updateRotation = false;
 
         // Initilize the neural network
@@ -79,8 +87,10 @@ public class CharacterController : MonoBehaviour
             Debug.Log("Generating new MasterNetwork");
             MasterNetwork = new NeuralNetwork(layout);       // Construct the NN
         }
-    }
 
+        // Subscribe to event manager events
+        em.HitEvent += OnHitEvent;
+    }
 
     void Update()
     {
@@ -99,40 +109,46 @@ public class CharacterController : MonoBehaviour
             }
         }
 
-        // Check the state
-        // Run the NN
-        //float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
-        //float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
+        //Check the state
+        //Run the NN
+        float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
+        float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
 
-        //// Evaluate the NN
-        //Results = new List<Output>();                       // Create the list of results
-        //for (int i = 0; i < Outputs; i++)
-        //{
-        //    Output t = new Output();
-        //    t.ID = i;
-        //    t.Value = _outputs[i];
-        //    Results.Add(t);
-        //}
-        //Results.Sort();                                     // Sort the list of results
+        // Evaluate the NN
+        Results = new List<Output>();                       // Create the list of results
+        for (int i = 0; i < Outputs; i++)
+        {
+            Output t = new Output();
+            t.ID = i;
+            t.Value = _outputs[i];
+            Results.Add(t);
+        }
+        Results.Sort();                                     // Sort the list of results
 
-        //currentState = (State)Results[Results.Count-1].ID;  // Set the result
-        currentState = State.Idle;
+        currentState = (State)Results[Results.Count - 1].ID;  // Set the result
+
         // Run the current state
         switch (currentState)
         {
             case State.Idle: // If idle, run the idle loop
                 {
                     if (Anim.GetBool("InCombat"))
+                    {
                         Anim.SetBool("InCombat", false);
+                    }
+
                     NController.Run();
                     break;
                 }
             case State.Combat: // If in combat, run the combat loop
                 {
                     if (!Anim.GetBool("InCombat"))
+                    {
                         Anim.SetBool("InCombat", true);
-                    if (GetTarget())
-                        CController.Run(CombatTarget);
+                        Anim.Play("Base Layer.Combat.Locomotion");
+                    }
+
+                    CController.Run();
                     break;
                 }
             case State.Dead:
@@ -159,32 +175,47 @@ public class CharacterController : MonoBehaviour
         NController.NeedsNetwork.AddFitness(Stats.happiness * Time.deltaTime);
     }
 
-    // Finds nearest combat target
-    bool GetTarget()
+    // A nearby robot has been hit
+    public void OnHitEvent(object source, PublicEventArgs args)
     {
-        float targetDistance = 1000;
-        float newDistance = 0;
-        List<GameObject> objects = new List<GameObject>();
-        objects.AddRange(GameObject.FindGameObjectsWithTag("character"));
-        objects.AddRange(GameObject.FindGameObjectsWithTag("Player"));
+        CharacterStats agentStats = args.Agent.GetComponent<CharacterStats>();
+        CharacterStats subjectStats = args.Subject.GetComponent<CharacterStats>();
 
-        if (objects.Count > 0) // If there are any enemies (not including itself)
+        // If the bot is in range of the event
+        if (Vector3.Distance(args.Agent.transform.position, gameObject.transform.position) < args.Range
+            && currentState == State.Idle)
         {
-            foreach (GameObject element in objects)
+            switch (Stats.faction)
             {
-                if (element.name != this.name) // And the enemy isn't itself ヽ( ͡ಠ ʖ̯ ͡ಠ)ﾉ
-                {
-                    newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
-                    if (newDistance < targetDistance)
+                default:
+                case Factions.Neutral:
                     {
-                        targetDistance = newDistance;
-                        CombatTarget = element; // Set new target
+                        NController._eventCount += 5.0f;
+                        NController.target = args.Agent;
+                        Stats.fear += 10.0f;
+                        break;
                     }
-                }
+                case Factions.Barbarians:
+                    {
+                        if(subjectStats.faction == Stats.faction)
+                        {
+                            Stats.anger += 10.0f;
+                            CController.SetTarget(args.Agent);
+                        }
+                        else
+                        {
+                            NController._eventCount += 5.0f;
+                            NController.target = args.Agent;
+                        }
+                        break;
+                    }
+                case Factions.Guards:
+                    {
+                        Stats.anger += 10.0f;
+                        CController.SetTarget(args.Agent);
+                        break;
+                    }
             }
-            return true; // Target is found and set
         }
-
-        return false; // No valid target was found
     }
 }

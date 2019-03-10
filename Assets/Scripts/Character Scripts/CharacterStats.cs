@@ -9,7 +9,6 @@ public class CharacterStats : MonoBehaviour
     public float health;
     public float maxHealth;
 
-
     [Header("Stamina Settings:")]
     public float stamina;
     public float maxStamina;
@@ -31,8 +30,14 @@ public class CharacterStats : MonoBehaviour
     [Header("Emotions:")]
     public float happiness = 0.0f;
     public float anger = 0.0f;
+    public float fear = 0.0f;
     public List<float> hModifiers;
 
+    // Faction
+    [Header("Faction:")]
+    public Factions faction;
+
+    // Debug
     [Header("Debug:")]
     public bool randomize = false;
     public bool reset = false;
@@ -40,14 +45,14 @@ public class CharacterStats : MonoBehaviour
     [Space(10, order = 0)]
     public float debug = 0.0f;
     
-
-    [SerializeField] private float iframes = 30;
-    [SerializeField] private float icount;
-    [SerializeField] private bool invincible = false;
+    private float iframes = 30;
+    private float icount;
+    private bool invincible = false;
 
     public float rTime;
     public float rCount = 0;
 
+    // A dictionary of the character stats, for easy lookup and access
     public IDictionary<string, float> table = new Dictionary<string, float>()
     {
         // Combat
@@ -64,12 +69,30 @@ public class CharacterStats : MonoBehaviour
 
         // Emotions
         {"happiness", 0.0f },
-        {"Anger", 0.0f},
+        {"anger", 0.0f},
+        {"fear", 0.0f},
 
         // Debug
         {"random", 0.0f},
         {"debug", 0.0f }
     };
+
+    // A dictionary of all entities this bot has ever interacted with
+    // Float is a rating of their relationship between 0 and 100
+    // Not in use, see faction system
+    public IDictionary<GameObject, float> relationships = new Dictionary<GameObject, float>();
+
+    // A dictionary of all factions and the robots relationship with them
+    // Float is a rating of their relationship between 0 and 100
+    public IDictionary<Factions, float> factionRelationships = new Dictionary<Factions, float>()
+    {
+        {Factions.Barbarians, 50.0f},
+        {Factions.Guards, 50.0f},
+        {Factions.Neutral, 50.0f}
+    };
+
+    public ParticleSystem happy;
+    public ParticleSystem sad;
 
     // Use this for initialization
     void Start()
@@ -100,17 +123,21 @@ public class CharacterStats : MonoBehaviour
         UpdateStats();
     }
 
-    public void GetHit(float dmg)
+    public void GetHit(GameObject agent, float dmg)
     {
         if (!invincible)
         {
             health -= dmg;
             stamina -= dmg / 2;
             invincible = true;
-
-            hModifiers.Add(-0.5f);
-            anger += 10;
         }
+
+        DecreaseRelationship(agent, 10.0f);
+        hModifiers.Add(-0.5f);
+        anger += 10;
+
+        if (GetComponent<CombatController>() != null)
+            GetComponent<CombatController>().SetTarget(agent);
     }
 
     /// <summary>
@@ -168,6 +195,7 @@ public class CharacterStats : MonoBehaviour
 
         happiness = CalculateHappiness();
         anger = ((anger <= 0) ? 0 : anger - Time.deltaTime * 0.1f);
+        fear = ((fear <= 0) ? 0 : anger - Time.deltaTime * 0.1f);
 
         // Stamina
         if (rechargeDelay > 0)
@@ -259,5 +287,31 @@ public class CharacterStats : MonoBehaviour
         social = Random.Range(0.0f, 100f);
 
         randomize = false;
+    }
+
+    public void IncreaseRelationship(GameObject agent, float value)
+    {
+        if (relationships.ContainsKey(agent))
+        {
+            relationships[agent] = Mathf.Clamp(relationships[agent] + value, 0, 100);
+        }
+        else
+        {
+            relationships.Add(agent, 50 + value);
+        }
+        happy.Play();
+    }
+
+    public void DecreaseRelationship(GameObject agent, float value)
+    {
+        if (relationships.ContainsKey(agent))
+        {
+            relationships[agent] = Mathf.Clamp(relationships[agent] - value, 0, 100);
+        }
+        else
+        {
+            relationships.Add(agent, 50 - value);
+        }
+        sad.Play();
     }
 }
