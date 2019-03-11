@@ -20,6 +20,7 @@ public class CombatController : AiBehaviour
 
     public override void Start()
     {
+        // Set the filePath and init the network
         filePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
         base.Start();
 
@@ -27,7 +28,6 @@ public class CombatController : AiBehaviour
         Anim = GetComponent<Animator>();
         AIAgent = GetComponent<NavMeshAgent>();
         Stats = GetComponent<CharacterStats>();
-
     }
 
     public override void Run()

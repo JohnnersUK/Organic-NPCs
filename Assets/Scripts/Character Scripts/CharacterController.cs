@@ -38,6 +38,7 @@ public class CharacterController : AiBehaviour
 
     public override void Start()
     {
+        // Set the filePath and init the network
         filePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
         base.Start();
 

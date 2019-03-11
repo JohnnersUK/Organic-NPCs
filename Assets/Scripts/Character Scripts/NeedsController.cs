@@ -161,7 +161,8 @@ public class NeedsController : AiBehaviour
             target = null;
             foreach (Interactable element in objects)
             {
-                if (element.Type == actionTag && !element.Occupied)
+                // If the object is of the activity type, shares the same faction and isn't occupied
+                if (element.Type == actionTag && (element._Factions.Count == 0 || element._Factions.Contains(Stats.faction)) && !element.Occupied)
                 {
                     newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
                     if (newDistance < targetDistance)
@@ -229,12 +230,12 @@ public class NeedsController : AiBehaviour
         }
         else if (!Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + t.tag))
         {
-            Anim.Play("Base Layer." + t.tag);
+            Anim.Play("Base Layer." + Stats.faction.ToString() + "." + t.tag);
 
             switch (t.tag)
             {
                 case "Eat":
-                    Stats.hunger += 30;
+                    Stats.hunger += 50;
                     break;
                 case "Sleep":
                     // Reset fatigue and stamina
@@ -244,10 +245,10 @@ public class NeedsController : AiBehaviour
                     Stats.hModifiers.Clear();
                     break;
                 case "Work":
-                    Stats.boredom += 30;
+                    Stats.boredom += 50;
                     break;
                 case "Recreational":
-                    Stats.social += 40;
+                    Stats.social += 50;
                     break;
             }
         }

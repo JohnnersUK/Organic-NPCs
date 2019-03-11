@@ -44,7 +44,7 @@ public class PlayerAttackCollider : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     { 
-        if (other.tag != "Player")
+        if (other.tag == "character")
         {
             Debug.Log("Hit " + other.name);
 
