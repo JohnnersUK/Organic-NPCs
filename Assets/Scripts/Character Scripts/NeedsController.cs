@@ -195,6 +195,7 @@ public class NeedsController : AiBehaviour
     // Move to a location
     private void MoveTo(GameObject t)
     {
+        Anim.Play("Base Layer.Grounded");
         GetComponentInChildren<Text>().text = "Moving to object";
 
         if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
@@ -222,13 +223,13 @@ public class NeedsController : AiBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(lookPos);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2);
 
-        if (Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + t.tag))
+        if (Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
         {
             ActionQueue.Pop();
             Using = false;
             t.GetComponent<Interactable>().Occupied = false;
         }
-        else if (!Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + t.tag))
+        else if (!Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
         {
             Anim.Play("Base Layer." + Stats.faction.ToString() + "." + t.tag);
 
@@ -251,6 +252,8 @@ public class NeedsController : AiBehaviour
                     Stats.social += 50;
                     break;
             }
+
+            Using = true;
         }
 
     }
