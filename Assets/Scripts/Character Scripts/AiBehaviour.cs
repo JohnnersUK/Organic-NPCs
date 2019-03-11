@@ -42,13 +42,13 @@ public class AiBehaviour : MonoBehaviour
 
         if (filePath != null && File.Exists(filePath))
         {
-            Debug.Log("Loading in NeedsNetwork from file: " + filePath);
+            Debug.Log("Loading in network from file: " + filePath);
             Network = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
             Debug.Log("Loading complete");
         }
         else
         {
-            Debug.Log("Generating new NeedsNetwork");
+            Debug.Log("Generating new network");
             Network = new NeuralNetwork(layout);       // Construct the NN
         }
     }

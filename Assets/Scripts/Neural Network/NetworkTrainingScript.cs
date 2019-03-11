@@ -15,6 +15,7 @@ public class NetworkTrainingScript : MonoBehaviour
         CombatNetwork = 1,
         MasterNetwork = 2
     }
+    private List<AiBehaviour> _Behaviours;
 
     [Header("Simulation Settings:")]
     public Networks trainingNetwork;
@@ -71,12 +72,26 @@ public class NetworkTrainingScript : MonoBehaviour
         spawnPoints = tsp.GetComponentsInChildren<Transform>();
 
         bots = new GameObject[spawnPoints.Length];
+        _Behaviours = new List<AiBehaviour>();
 
         foreach (Transform T in spawnPoints)
         {
             // Initilize the bots and assign a faction
             bots[i] = Instantiate(botPrefab, T.position, T.rotation);
             bots[i].GetComponent<CharacterStats>().faction = (Factions)Random.Range(0, 3);
+
+            switch (trainingNetwork)
+            {
+                case Networks.CombatNetwork:
+                    _Behaviours.Add(bots[i].GetComponent<CombatController>());
+                    break;
+                case Networks.MasterNetwork:
+                    _Behaviours.Add(bots[i].GetComponent<CharacterController>());
+                    break;
+                case Networks.NeedsNetwork:
+                    _Behaviours.Add(bots[i].GetComponent<NeedsController>());
+                    break;
+            }
 
             // name and color the bot to make it identifiable
             bots[i].name = "bot " + i + " " + bots[i].GetComponent<CharacterStats>().faction.ToString();
@@ -106,6 +121,7 @@ public class NetworkTrainingScript : MonoBehaviour
             }
             i++;
         }
+
     }
 
     // Update is called once per frame
@@ -126,32 +142,10 @@ public class NetworkTrainingScript : MonoBehaviour
         int i, k;
         List<NeuralNetwork> networks = new List<NeuralNetwork>();
         tempWeights = new List<float[][][]>();
-        switch (trainingNetwork)
+
+        foreach(AiBehaviour b in _Behaviours)
         {
-            case Networks.CombatNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        networks.Add(b.GetComponent<CombatController>().Network);
-                    }
-                    break;
-                }
-            case Networks.NeedsNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        networks.Add(b.GetComponent<NeedsController>().Network);
-                    }
-                    break;
-                }
-            case Networks.MasterNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        networks.Add(b.GetComponent<CharacterController>().Network);
-                    }
-                    break;
-                }
+            networks.Add(b.Network);
         }
 
         // Order the networks
@@ -181,57 +175,20 @@ public class NetworkTrainingScript : MonoBehaviour
 
             Destroy(bots[k]);
         }
+        _Behaviours.Clear();
 
         // Create a new set of mutated bots using the top 5 previous fitnesses
-        for (k = 0; k < spawnPoints.Length; k++)
-        {
-            bots[k] = Instantiate(botPrefab, spawnPoints[k].position, spawnPoints[k].rotation);
-
-            // name the bot to make it identifiable
-            bots[k].name = "bot " + k;
-        }
+        Start();
 
         k = 0;
-        switch (trainingNetwork)
+        foreach(AiBehaviour b in _Behaviours)
         {
-            case Networks.CombatNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        b.GetComponent<CombatController>().Start();
-                        b.GetComponent<CombatController>().Network.SetWeights(tempWeights[k]);
-                        b.GetComponent<CombatController>().Network.Mutate();
-                        k++;
-                        if (k == tempWeights.Count) k = 0;
-                    }
-                    break;
-                }
-            case Networks.NeedsNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        b.GetComponent<NeedsController>().Start();
-                        b.GetComponent<NeedsController>().Network.SetWeights(tempWeights[k]);
-                        b.GetComponent<NeedsController>().Network.Mutate();
-                        k++;
-                        if (k == tempWeights.Count) k = 0;
-                    }
-                    break;
-                }
-            case Networks.MasterNetwork:
-                {
-                    foreach (GameObject b in bots)
-                    {
-                        b.GetComponent<CharacterController>().Start();
-                        b.GetComponent<CharacterController>().Network.SetWeights(tempWeights[k]);
-                        b.GetComponent<CharacterController>().Network.Mutate();
-                        k++;
-                        if (k == tempWeights.Count) k = 0;
-                    }
-                    break;
-                }
+            b.Start();
+            b.Network.SetWeights(tempWeights[k]);
+            b.Network.Mutate();
+            k++;
+            if (k == tempWeights.Count) k = 0;
         }
-
 
         // Reset the interactables
         for (i = 0; i < objects.Length; i++)
