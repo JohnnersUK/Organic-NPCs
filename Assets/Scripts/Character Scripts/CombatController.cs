@@ -5,16 +5,8 @@ using UnityEngine.AI;
 using UnityEngine.UI;
 
 
-public class CombatController : MonoBehaviour
+public class CombatController : AiBehaviour
 {
-    // Neural network
-    public NeuralNetwork CombatNetwork;
-
-    public string[] Inputs;
-
-    public int[] HiddenLayers;
-    public int Outputs;
-
     public float AttackCost;
     public float DodgeCost;
 
@@ -22,48 +14,23 @@ public class CombatController : MonoBehaviour
     private Animator Anim;
     private NavMeshAgent AIAgent;
     private GameObject CombatTarget;
-    private CharacterStats Stats;
 
     private int output = 0;
     private float count = 0;
 
-    public void Start()
+    public override void Start()
     {
+        filePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
+        base.Start();
+
         // Get components
         Anim = GetComponent<Animator>();
         AIAgent = GetComponent<NavMeshAgent>();
         Stats = GetComponent<CharacterStats>();
 
-        // Initilize the neural network
-        int length = HiddenLayers.Length + 2;
-        int[] layout = new int[length]; // Length of the NN = num of hidden layers + 2
-
-        layout[0] = Inputs.Length; // First layer is the input layer
-
-        // Initilize the hidden layer
-        for (int i = 0; i < HiddenLayers.Length; i++) // For each hidden layer
-        {
-            layout[i + 1] = HiddenLayers[i]; // Set the number of nodes
-        }
-
-        layout[layout.Length - 1] = Outputs; // Last layer is the output layer
-
-        string filePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
-        if (File.Exists(filePath))
-        {
-            Debug.Log("Loading in CombatNetwork from file: " + filePath);
-            CombatNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
-            Debug.Log("Loading complete");
-        }
-        else
-        {
-            Debug.Log("Generating new CombatNetwork");
-            CombatNetwork = new NeuralNetwork(layout);       // Construct the NN
-        }
     }
 
-
-    public void Run()
+    public override void Run()
     {
         while (CombatTarget == null)
         {
@@ -71,20 +38,15 @@ public class CombatController : MonoBehaviour
         }
         LookAtTarget();
 
-        // Run the NN
-        float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        float[] results = CombatNetwork.Run(inputs);    // Pass them through the NN
-
         // Evaluate the NN
-
         float outputTotal = -2;
 
-        for (int i = 0; i < results.Length; i++)
+        for (int i = 0; i < _outputs.Length; i++)
         {
-            if (results[i] > outputTotal)
+            if (_outputs[i] > outputTotal)
             {
                 output = i;
-                outputTotal = results[i];
+                outputTotal = _outputs[i];
             }
         }
 

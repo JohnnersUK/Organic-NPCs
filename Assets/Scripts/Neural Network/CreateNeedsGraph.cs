@@ -53,7 +53,7 @@ public class CreateNeedsGraph : MonoBehaviour {
     {
         float bestValue = -2;
         int bestNode = 0;
-        float[][] NodeValues = NC.NeedsNetwork.GetNeurons();
+        float[][] NodeValues = NC.Network.GetNeurons();
 
         for (int i = 0; i < inputs; i++)
         {

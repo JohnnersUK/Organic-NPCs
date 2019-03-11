@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
 
 using UnityEngine;
 
@@ -159,33 +157,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public float GetFitness()
     {
         return fitness;
-    }
-
-
-    // Compare NNs
-    public int CompareFitness(NeuralNetwork other)
-    {
-        // Error handling
-        if (other == null)
-        {
-            Debug.Log("No NN to compare");
-            return 1;
-        }
-
-
-        if (fitness > other.fitness) // If current NN is better fitted
-        {
-            return 1;
-        }
-        else if (fitness < other.fitness) // If other NN is better fitted
-        {
-            return -1;
-        }
-        else // If they are equal                    
-        {
-            return 0;
-        }
-
     }
 
     public float[][] GetNeurons()

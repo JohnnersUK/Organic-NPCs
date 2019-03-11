@@ -132,7 +132,7 @@ public class NetworkTrainingScript : MonoBehaviour
                 {
                     foreach (GameObject b in bots)
                     {
-                        networks.Add(b.GetComponent<CombatController>().CombatNetwork);
+                        networks.Add(b.GetComponent<CombatController>().Network);
                     }
                     break;
                 }
@@ -140,7 +140,7 @@ public class NetworkTrainingScript : MonoBehaviour
                 {
                     foreach (GameObject b in bots)
                     {
-                        networks.Add(b.GetComponent<NeedsController>().NeedsNetwork);
+                        networks.Add(b.GetComponent<NeedsController>().Network);
                     }
                     break;
                 }
@@ -148,7 +148,7 @@ public class NetworkTrainingScript : MonoBehaviour
                 {
                     foreach (GameObject b in bots)
                     {
-                        networks.Add(b.GetComponent<CharacterController>().MasterNetwork);
+                        networks.Add(b.GetComponent<CharacterController>().Network);
                     }
                     break;
                 }
@@ -199,8 +199,8 @@ public class NetworkTrainingScript : MonoBehaviour
                     foreach (GameObject b in bots)
                     {
                         b.GetComponent<CombatController>().Start();
-                        b.GetComponent<CombatController>().CombatNetwork.SetWeights(tempWeights[k]);
-                        b.GetComponent<CombatController>().CombatNetwork.Mutate();
+                        b.GetComponent<CombatController>().Network.SetWeights(tempWeights[k]);
+                        b.GetComponent<CombatController>().Network.Mutate();
                         k++;
                         if (k == tempWeights.Count) k = 0;
                     }
@@ -211,8 +211,8 @@ public class NetworkTrainingScript : MonoBehaviour
                     foreach (GameObject b in bots)
                     {
                         b.GetComponent<NeedsController>().Start();
-                        b.GetComponent<NeedsController>().NeedsNetwork.SetWeights(tempWeights[k]);
-                        b.GetComponent<NeedsController>().NeedsNetwork.Mutate();
+                        b.GetComponent<NeedsController>().Network.SetWeights(tempWeights[k]);
+                        b.GetComponent<NeedsController>().Network.Mutate();
                         k++;
                         if (k == tempWeights.Count) k = 0;
                     }
@@ -223,8 +223,8 @@ public class NetworkTrainingScript : MonoBehaviour
                     foreach (GameObject b in bots)
                     {
                         b.GetComponent<CharacterController>().Start();
-                        b.GetComponent<CharacterController>().MasterNetwork.SetWeights(tempWeights[k]);
-                        b.GetComponent<CharacterController>().MasterNetwork.Mutate();
+                        b.GetComponent<CharacterController>().Network.SetWeights(tempWeights[k]);
+                        b.GetComponent<CharacterController>().Network.Mutate();
                         k++;
                         if (k == tempWeights.Count) k = 0;
                     }

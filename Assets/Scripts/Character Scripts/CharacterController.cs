@@ -6,7 +6,7 @@ using UnityEngine.AI;
 using UnityEngine.UI;
 using UnityStandardAssets.Characters.ThirdPerson;
 
-public class CharacterController : MonoBehaviour
+public class CharacterController : AiBehaviour
 {
     public bool InCombat = false;
     public Material dead;
@@ -18,7 +18,6 @@ public class CharacterController : MonoBehaviour
     // Components
     private Animator Anim;
     private Camera MainCam;
-    private CharacterStats Stats;
 
     private CombatController CController;
     private NeedsController NController;
@@ -29,15 +28,6 @@ public class CharacterController : MonoBehaviour
 
     private EventManager em;
 
-    // Neural network
-    public NeuralNetwork MasterNetwork;
-
-    public string[] Inputs;
-    public int[] HiddenLayers;
-    public int Outputs;
-
-    public List<Output> Results;
-
     enum State
     {
         Idle = 0,
@@ -46,8 +36,11 @@ public class CharacterController : MonoBehaviour
     }
     State currentState = State.Idle;
 
-    public void Start()
+    public override void Start()
     {
+        filePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
+        base.Start();
+
         MainCam = Camera.main;
         AIAgent = GetComponent<NavMeshAgent>();
         TPController = GetComponent<ThirdPersonCharacter>();
@@ -61,38 +54,11 @@ public class CharacterController : MonoBehaviour
 
         AIAgent.updateRotation = false;
 
-        // Initilize the neural network
-        int length = HiddenLayers.Length + 2;
-        int[] layout = new int[length];                 // Length of the NN = num of hidden layers + 2
-
-        layout[0] = Inputs.Length;                      // First layer is the input layer
-
-        // Initilize the hidden layer
-        for (int i = 0; i < HiddenLayers.Length; i++)   // For each hidden layer
-        {
-            layout[i + 1] = HiddenLayers[i];            // Set the number of nodes
-        }
-
-        layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
-
-        string filePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
-        if (File.Exists(filePath))
-        {
-            Debug.Log("Loading in MasterNetwork from file: " + filePath);
-            MasterNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
-            Debug.Log("Loading complete");
-        }
-        else
-        {
-            Debug.Log("Generating new MasterNetwork");
-            MasterNetwork = new NeuralNetwork(layout);       // Construct the NN
-        }
-
         // Subscribe to event manager events
         em.HitEvent += OnHitEvent;
     }
 
-    void Update()
+    public override void Update()
     {
         // If the AI Agent isn't at its target position, 
         // Call the move funciton in the TPS
@@ -112,10 +78,10 @@ public class CharacterController : MonoBehaviour
         //Check the state
         //Run the NN
         float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
-        float[] _outputs = MasterNetwork.Run(inputs);       // Pass them through the NN
+        float[] _outputs = Network.Run(inputs);       // Pass them through the NN
 
         // Evaluate the NN
-        Results = new List<Output>();                       // Create the list of results
+        Results = new List<Output>();                 // Create the list of results
         for (int i = 0; i < Outputs; i++)
         {
             Output t = new Output();
@@ -166,13 +132,13 @@ public class CharacterController : MonoBehaviour
                     enabled = false;
 
                     // Bots can no longer gain fitness whilst dead
-                    NController.NeedsNetwork.AddFitness(-Stats.happiness);
+                    NController.Network.AddFitness(-Stats.happiness);
 
                     break;
                 }
         }
 
-        NController.NeedsNetwork.AddFitness(Stats.happiness * Time.deltaTime);
+        NController.Network.AddFitness(Stats.happiness * Time.deltaTime);
     }
 
     // A nearby robot has been hit

@@ -1,32 +1,21 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 
-public class NeedsController : MonoBehaviour
+public class NeedsController : AiBehaviour
 {
-    // Neural network
-    public NeuralNetwork NeedsNetwork;
-
-    public string[] Inputs;
-
-    public int[] HiddenLayers;
-    public int Outputs;
-
-    public Output[] Results;
-
     // Components
     private Animator Anim;
-    private CharacterStats Stats;
     private NavMeshAgent AIAgent;
 
     public GameObject target;
     private Interactable[] objects;
 
     private int output = 0;
-    private float[] _outputs;
 
     private float count = 0;
     private string actionTag;
@@ -38,53 +27,28 @@ public class NeedsController : MonoBehaviour
 
     private Stack ActionQueue = new Stack();
 
-    public void Start()
+    public override void Start()
     {
+        // Set the filePath and init the network
+        filePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
+        base.Start();
+
         // Get components
         Anim = GetComponent<Animator>();
-        Stats = GetComponent<CharacterStats>();
         AIAgent = GetComponent<NavMeshAgent>();
 
         GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
         objects = interactables.GetComponentsInChildren<Interactable>();
-
-        // Initilize the neural network
-        int length = HiddenLayers.Length + 2;
-        int[] layout = new int[length];                 // Length of the NN = num of hidden layers + 2
-
-        layout[0] = Inputs.Length;                      // First layer is the input layer
-
-        // Initilize the hidden layer
-        for (int i = 0; i < HiddenLayers.Length; i++)   // For each hidden layer
-        {
-            layout[i + 1] = HiddenLayers[i];            // Set the number of nodes
-        }
-
-        layout[layout.Length - 1] = Outputs;            // Last layer is the output layer
-
-        string filePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
-        if (File.Exists(filePath))
-        {
-            Debug.Log("Loading in NeedsNetwork from file: " + filePath);
-            NeedsNetwork = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
-            Debug.Log("Loading complete");
-        }
-        else
-        {
-            Debug.Log("Generating new NeedsNetwork");
-            NeedsNetwork = new NeuralNetwork(layout);       // Construct the NN
-        }
     }
 
-    public void Update()
+    public override void Update()
     {
         // Run the NN
         float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        _outputs = NeedsNetwork.Run(inputs);             // Pass them through the NN
+        _outputs = Network.Run(inputs);             // Pass them through the NN
     }
 
-
-    public void Run()
+    public override void Run()
     {
         QueueItem currentAction;
 
@@ -156,48 +120,18 @@ public class NeedsController : MonoBehaviour
 
         // Evaluate the NN
         Update();
-        Results = new Output[_outputs.Length];
-
-        for (int i = 0; i < Results.Length; i++)
+        Results = new List<Output>();
+        for (int i = 0; i < _outputs.Length; i++)
         {
-            Results[i] = new Output();
-            Results[i].ID = i;
-            Results[i].Value = _outputs[i];
+            Output temp = new Output();
+            temp.ID = i;
+            temp.Value = _outputs[i];
+            Results.Add(temp);
         }
 
-        // Shell sort to determine priority
-        int j, inc;
-        Output temp;
-        inc = 3;
-        while (inc > 0)
-        {
-            for (int i = 0; i < Results.Length; i++)
-            {
-                j = i;
-                temp = Results[i];
-                while ((j >= inc) && (Results[j - inc].Value >
-                    temp.Value))
-                {
-                    Results[j] = Results[j - inc];
-                    j = j - inc;
-                }
-                Results[j] = temp;
-            }
-            if (inc / 2 != 0)
-            {
-                inc = inc / 2;
-            }
-            else if (inc == 1)
-            {
-                inc = 0;
-            }
-            else
-            {
-                inc = 1;
-            }
-        }
+        Results.Sort();
 
-        priority = Results.Length - 1; // Set the priority level
+        priority = Results.Count - 1; // Set the priority level
 
         // Find an activity
         do
@@ -252,7 +186,7 @@ public class NeedsController : MonoBehaviour
             {
                 priority--;
                 if (priority < 0)
-                    priority = Results.Length - 1;  // Loop back around if no action is still available
+                    priority = Results.Count - 1;  // Loop back around if no action is still available
             }
         } while (!hasAction);
     }

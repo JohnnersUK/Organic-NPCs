@@ -52,7 +52,7 @@ public class CreateNetworkGraph : MonoBehaviour
     {
         float bestValue = -2;
         int bestNode = 0;
-        float[][] NodeValues = CC.CombatNetwork.GetNeurons();
+        float[][] NodeValues = CC.Network.GetNeurons();
 
         for (int i = 0; i < inputs; i++)
         {
