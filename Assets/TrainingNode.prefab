@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1196723386811732}
+  m_IsPrefabAsset: 1
+--- !u!1 &1196723386811732
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4533813097921372}
+  - component: {fileID: 114824479838141574}
+  - component: {fileID: 114271303011930682}
+  m_Layer: 0
+  m_Name: TrainingNode
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4533813097921372
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1196723386811732}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.2607535, y: 0.76577336, z: -10.09864}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114271303011930682
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1196723386811732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4de7d5ef898521a4589fa57ed6ff6c3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: 0
+  maxHealth: 0
+  stamina: 0
+  maxStamina: 0
+  staminaGain: 0
+  maxRechargeDelay: 0
+  rechargeDelay: 0
+  damage: 10
+  range: 1.5
+  fatigue: 100
+  hunger: 100
+  boredom: 100
+  social: 100
+  happiness: 0
+  anger: 0
+  fear: 0
+  hModifiers: []
+  faction: 0
+  randomize: 0
+  reset: 0
+  debug: 0
+  rTime: 0
+  rCount: 0
+  happy: {fileID: 0}
+  sad: {fileID: 0}
+--- !u!114 &114824479838141574
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1196723386811732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f46b80dc179fa6745b793bf81265fba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Network:
+    fitness: 0
+    owner: {fileID: 0}
+  Inputs: []
+  HiddenLayers: 
+  Outputs: 0
+  _outputs: []

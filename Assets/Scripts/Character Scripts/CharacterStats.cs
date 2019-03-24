@@ -44,8 +44,8 @@ public class CharacterStats : MonoBehaviour
 
     [Space(10, order = 0)]
     public float debug = 0.0f;
-    
-    private float iframes = 30;
+
+    private float iframes = 0.2f;
     private float icount;
     private bool invincible = false;
 
@@ -128,16 +128,26 @@ public class CharacterStats : MonoBehaviour
         if (!invincible)
         {
             health -= dmg;
-            stamina -= dmg / 2;
             invincible = true;
+            icount = iframes;
         }
 
         DecreaseRelationship(agent, 10.0f);
         hModifiers.Add(-0.5f);
-        anger += 10;
 
         if (GetComponent<CombatController>() != null)
-            GetComponent<CombatController>().SetTarget(agent);
+        {
+            if (faction == Factions.Guards && agent.GetComponent<CharacterStats>().faction == Factions.Guards)
+            {
+                anger += 10;
+            }
+            else
+            {
+                GetComponent<CombatController>().SetTarget(agent);
+                anger += 10;
+            }  
+        }
+
     }
 
     /// <summary>
@@ -186,7 +196,8 @@ public class CharacterStats : MonoBehaviour
         hunger = Mathf.Clamp(hunger - 1 * Time.deltaTime, 0.0f, 100.0f);
         if (hunger == 0)    // If hunger is equal to zero, lose health
         {
-            health -= 1 * Time.deltaTime;
+            //health -= 1 * Time.deltaTime;
+            // Dissabled from gameplay testing feedback
         }
 
         boredom = Mathf.Clamp(boredom - 0.5f * Time.deltaTime, 0.0f, 100.0f);
@@ -219,14 +230,20 @@ public class CharacterStats : MonoBehaviour
         {
             // Recharge stamina
             if (rechargeDelay == 0)
+            {
                 stamina = ((stamina < maxStamina) ? stamina + staminaGain * Time.deltaTime : maxStamina);
+            }
         }
         else // If stamina has been modified
         {
             if (stamina > 0)
+            {
                 rechargeDelay = maxRechargeDelay / 4;
+            }
             else
+            {
                 rechargeDelay = maxRechargeDelay;
+            }
         }
 
         table["health"] = health;
@@ -264,7 +281,7 @@ public class CharacterStats : MonoBehaviour
 
         total = s + b + f + hSine;
 
-        foreach(float m in hModifiers)
+        foreach (float m in hModifiers)
         {
             total -= m;
         }
@@ -286,7 +303,10 @@ public class CharacterStats : MonoBehaviour
         boredom = Random.Range(0.0f, 100f);
         social = Random.Range(0.0f, 100f);
 
-        randomize = false;
+        anger = Random.Range(-10.0f, 10.0f);
+        fear = Random.Range(0.0f, 0.0f);
+
+        UpdateStats();
     }
 
     public void IncreaseRelationship(GameObject agent, float value)

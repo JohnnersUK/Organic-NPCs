@@ -6,7 +6,8 @@ using UnityEngine;
 
 public enum EventType
 {
-    Hit
+    Hit,
+    Death
 }
 
 public class PublicEventArgs : EventArgs

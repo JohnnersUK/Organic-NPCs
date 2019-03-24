@@ -38,6 +38,12 @@ public class CombatController : AiBehaviour
         }
         LookAtTarget();
 
+        if(CombatTarget.GetComponent<CharacterStats>().health <= 0)
+        {
+            Stats.anger = 0;
+            CombatTarget = null;
+        }
+
         // Evaluate the NN
         float outputTotal = -2;
 
@@ -121,6 +127,9 @@ public class CombatController : AiBehaviour
     // Check if the combat target is in range
     bool InRange()
     {
+        if (CombatTarget == null)
+            return false;
+
         if (Vector3.Distance(CombatTarget.transform.position, this.transform.position) > Stats.table["range"])
         {
             return false;

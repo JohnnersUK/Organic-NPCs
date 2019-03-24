@@ -750,15 +750,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0045f7d3119327e428407a0629864863, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  intensiveTraining: 1
+  itCount: 500
   trainingNetwork: 2
   simultaionNum: 0
   simulationSpeed: 1
   simulationTime: 300
   botPrefab: {fileID: 1110112973772090, guid: a381fafb8953b7f4ab2a8d6a30371ad5, type: 2}
+  nodePrefab: {fileID: 1196723386811732, guid: e4bc8ae4a88f82644acb0d6ca100c006, type: 2}
   fileName: NeedsNetwork.nn
   loadWeights: 0
   saveWeights: 0
   bots: []
+  nodes: []
 --- !u!4 &56799098
 Transform:
   m_ObjectHideFlags: 0
@@ -13430,7 +13434,7 @@ Transform:
   m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_Children: []
   m_Father: {fileID: 1791309128}
-  m_RootOrder: 358
+  m_RootOrder: 284
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1087335262
 Prefab:
@@ -20545,6 +20549,7 @@ Transform:
   - {fileID: 473971247}
   - {fileID: 1946099974}
   - {fileID: 937438116}
+  - {fileID: 1081910151}
   - {fileID: 1457281767}
   - {fileID: 154983810}
   - {fileID: 2032648078}
@@ -20619,7 +20624,6 @@ Transform:
   - {fileID: 929318196}
   - {fileID: 2095626203}
   - {fileID: 1906751649}
-  - {fileID: 1081910151}
   - {fileID: 1270858143}
   - {fileID: 885257586}
   - {fileID: 370379044}

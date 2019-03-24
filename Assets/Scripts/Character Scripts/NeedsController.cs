@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
-
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
@@ -24,6 +23,7 @@ public class NeedsController : AiBehaviour
 
     public bool _event = false;
     public float _eventCount = 0.0f;
+    public EventType _eventType;
 
     private Stack ActionQueue = new Stack();
 
@@ -50,36 +50,10 @@ public class NeedsController : AiBehaviour
 
     public override void Run()
     {
-        QueueItem currentAction;
-
         // If there is an event taking place
         if (_eventCount > 0.0f)
         {
-            AIAgent.isStopped = true;
-            if (ActionQueue.Count < 1) // If theres nothing in the action queue
-            {
-                Anim.Play("Base Layer.Grounded");
-                ActionQueue.Push(new QueueItem("LookAt", target));
-            }
-            else // If there is something in the queue
-            {
-                currentAction = ActionQueue.Peek() as QueueItem;
-                if (currentAction.Action != "LookAt")
-                {
-                    Anim.Play("Base Layer.Grounded");
-                    ActionQueue.Push(new QueueItem("LookAt", target));
-                }
-            }
-
-            _eventCount -= Time.deltaTime;
-            if (_eventCount <= 0.0f)
-            {
-                currentAction = ActionQueue.Peek() as QueueItem;
-                if (currentAction.Action == "LookAt")
-                {
-                    ActionQueue.Pop();
-                }
-            }
+            ResolveEvent();
         }
 
         if (ActionQueue.Count < 1) // If theres nothing in the action queue
@@ -92,19 +66,28 @@ public class NeedsController : AiBehaviour
         {
             GetComponentInChildren<Text>().text = "Processing Action";
 
-            currentAction = ActionQueue.Peek() as QueueItem;
-
-            switch (currentAction.Action)
+            if(ActionQueue.Count > 0)
             {
-                case "MoveTo":
-                    MoveTo(currentAction.Target);
-                    break;
-                case "Use":
-                    Use(currentAction.Target);
-                    break;
-                case "LookAt":
-                    LookAtTarget();
-                    break;
+                QueueItem currentAction = ActionQueue.Peek() as QueueItem;
+
+                if (currentAction == null)
+                    return;
+
+                switch (currentAction.Action)
+                {
+                    case "MoveTo":
+                        MoveTo(currentAction.Target);
+                        break;
+                    case "Use":
+                        Use(currentAction.Target);
+                        break;
+                    case "LookAt":
+                        LookAtTarget();
+                        break;
+                    case "Flee":
+                        Flee(currentAction.Target);
+                        break;
+                }
             }
         }
     }
@@ -187,9 +170,62 @@ public class NeedsController : AiBehaviour
             {
                 priority--;
                 if (priority < 0)
+                {
                     priority = Results.Count - 1;  // Loop back around if no action is still available
+                }
             }
         } while (!hasAction);
+    }
+
+    void ResolveEvent()
+    {
+        QueueItem currentAction;
+       
+        switch (_eventType)
+        {
+            default:
+            case EventType.Hit:
+                {
+                    AIAgent.isStopped = true;
+                    if (ActionQueue.Count == 0) // If theres nothing in the action queue
+                    {
+                        Anim.Play("Base Layer.Grounded");
+                        ActionQueue.Push(new QueueItem("LookAt", target));
+                    }
+                    else // If there is something in the queue
+                    {
+                        currentAction = ActionQueue.Peek() as QueueItem;
+                        if (currentAction.Action != "LookAt" || currentAction.Action != "Flee")
+                        {
+                            Anim.Play("Base Layer.Grounded");
+                            ActionQueue.Push(new QueueItem("LookAt", target));
+                        }
+                    }
+
+                    _eventCount -= Time.deltaTime;
+                    if (_eventCount <= 0.0f)
+                    {
+                        currentAction = ActionQueue.Peek() as QueueItem;
+                        if (currentAction.Action == "LookAt")
+                        {
+                            ActionQueue.Pop();
+                        }
+                    }
+                    break;
+                }
+            case EventType.Death:
+                {               
+                    if(Stats.faction == Factions.Neutral)
+                    {
+                        AIAgent.isStopped = true;
+                        Anim.Play("Base Layer.Grounded");
+                        ActionQueue.Clear();
+
+                        ActionQueue.Push(new QueueItem("Flee", target));
+                    }
+                    break;
+                }
+        }
     }
 
     // Move to a location
@@ -267,9 +303,24 @@ public class NeedsController : AiBehaviour
         Quaternion rotation = Quaternion.LookRotation(lookPos);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
 
-        if(transform.rotation == rotation)
+        if (transform.rotation == rotation)
         {
             ActionQueue.Pop();
+        }
+    }
+
+    void Flee(GameObject t)
+    {
+        Anim.Play("Base Layer.Grounded");
+        GetComponentInChildren<Text>().text = "Moving to object";
+
+        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
+        {
+            if (AIAgent.isOnNavMesh)
+            {
+                AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
+                AIAgent.isStopped = false;
+            }
         }
     }
 

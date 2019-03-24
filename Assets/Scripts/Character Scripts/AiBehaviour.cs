@@ -21,7 +21,7 @@ public class AiBehaviour : MonoBehaviour
     protected string filePath;
     // Components
     protected CharacterStats Stats;
-    protected float[] _outputs;
+    public float[] _outputs;
 
     public virtual void Start()
     {
@@ -45,11 +45,12 @@ public class AiBehaviour : MonoBehaviour
             Debug.Log("Loading in network from file: " + filePath);
             Network = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(filePath);
             Debug.Log("Loading complete");
+            Network.name = gameObject.name;
         }
         else
         {
             Debug.Log("Generating new network");
-            Network = new NeuralNetwork(layout);       // Construct the NN
+            Network = new NeuralNetwork(layout, gameObject.name);       // Construct the NN
         }
     }
 

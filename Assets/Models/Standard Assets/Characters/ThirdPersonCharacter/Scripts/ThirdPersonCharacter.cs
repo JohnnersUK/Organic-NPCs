@@ -7,6 +7,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
     [RequireComponent(typeof(Animator))]
     public class ThirdPersonCharacter : MonoBehaviour
     {
+        public bool running = false;
         [SerializeField] float m_MovingTurnSpeed = 360;
         [SerializeField] float m_StationaryTurnSpeed = 180;
         [SerializeField] float m_JumpPower = 12f;
@@ -126,7 +127,16 @@ namespace UnityStandardAssets.Characters.ThirdPerson
         void UpdateAnimator(Vector3 move)
         {
             // update the animator parameters
-            m_Animator.SetFloat("Forward", m_ForwardAmount, 0.1f, Time.deltaTime);
+            if(running)
+            {
+                m_Animator.SetFloat("Forward", m_ForwardAmount, 0.1f, Time.deltaTime);
+            }
+            else
+            {
+                m_Animator.SetFloat("Forward", Mathf.Clamp(m_ForwardAmount, 0.0f, 0.5f), 0.1f, Time.deltaTime);
+            }
+            
+
             m_Animator.SetFloat("Turn", m_TurnAmount, 0.1f, Time.deltaTime);
             //m_Animator.SetBool("Crouch", m_Crouching);
             m_Animator.SetBool("OnGround", m_IsGrounded);

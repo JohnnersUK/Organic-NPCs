@@ -32,6 +32,12 @@ public class PlayerController : MonoBehaviour
     private UnityEngine.CharacterController cc;
     private CharacterStats stats;
 
+    private bool dead = false;
+
+    // Death event
+    public delegate void DeathEventHandler(object source, PublicEventArgs args);
+    public event DeathEventHandler DeathEvent;
+
     enum State
     {
         Default = -1,
@@ -52,6 +58,19 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (stats.health <= 0)
+        {
+            if(dead)
+            {
+                return;
+            }
+            else
+            {
+                anim.Play("Base Layer.Dead");
+                dead = true;
+                return;
+            }
+        }
 
         // Check if the player is in combat
         if (Input.GetKeyDown(KeyCode.LeftControl))
@@ -250,6 +269,15 @@ public class PlayerController : MonoBehaviour
             target = temp;
         }
 
+    }
+
+    protected virtual void SendDeathEvent()
+    {
+        if (DeathEvent != null)
+        {
+            PublicEventArgs args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
+            DeathEvent(this, args);
+        }
     }
 
 }

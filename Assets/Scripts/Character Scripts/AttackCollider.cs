@@ -52,7 +52,7 @@ public class AttackCollider : MonoBehaviour {
     {
         if ((other.tag == "character" || other.tag == "Player") && other.name != GetComponent<Collider>().transform.root.name)
         {
-            other.GetComponent<CharacterStats>().GetHit(this.gameObject, stats.table["damage"]);
+            other.GetComponent<CharacterStats>().GetHit(GetComponent<Transform>().root.gameObject, stats.table["damage"]);
             OnHitEvent(other);
         }
     }
@@ -61,7 +61,7 @@ public class AttackCollider : MonoBehaviour {
     {
         if (HitEvent != null)
         {
-            PublicEventArgs args = new PublicEventArgs(GetComponent<Collider>().transform.root.gameObject, other.transform.root.gameObject, EventType.Hit, 10);
+            PublicEventArgs args = new PublicEventArgs(GetComponent<Collider>().transform.root.gameObject, other.transform.root.gameObject, EventType.Hit, 50);
             HitEvent(this, args);
         }
     }

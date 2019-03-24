@@ -36,6 +36,10 @@ public class CharacterController : AiBehaviour
     }
     State currentState = State.Idle;
 
+    // Death event
+    public delegate void DeathEventHandler(object source, PublicEventArgs args);
+    public event DeathEventHandler DeathEvent;
+
     public override void Start()
     {
         // Set the filePath and init the network
@@ -51,16 +55,18 @@ public class CharacterController : AiBehaviour
         CController = GetComponent<CombatController>();
         NController = GetComponent<NeedsController>();
 
-        em = GameObject.Find("EventManager").GetComponent<EventManager>();
-
         AIAgent.updateRotation = false;
 
         // Subscribe to event manager events
-        em.HitEvent += OnHitEvent;
+        EventManager.instance.HitEvent += OnHitEvent;
+        EventManager.instance.DeathEvent += OnDeathEvent;
     }
 
     public override void Update()
     {
+        if (currentState == State.Dead)
+            return;
+
         // If the AI Agent isn't at its target position, 
         // Call the move funciton in the TPS
         if (AIAgent.isOnNavMesh)
@@ -76,23 +82,29 @@ public class CharacterController : AiBehaviour
             }
         }
 
-        //Check the state
-        //Run the NN
-        float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
-        float[] _outputs = Network.Run(inputs);       // Pass them through the NN
-
-        // Evaluate the NN
-        Results = new List<Output>();                 // Create the list of results
-        for (int i = 0; i < Outputs; i++)
+        if (Stats.health > 0)
         {
-            Output t = new Output();
-            t.ID = i;
-            t.Value = _outputs[i];
-            Results.Add(t);
-        }
-        Results.Sort();                                     // Sort the list of results
+            //Check the state
+            //Run the NN
+            float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
+            float[] _outputs = Network.Run(inputs);       // Pass them through the NN
 
-        currentState = (State)Results[Results.Count - 1].ID;  // Set the result
+            // Evaluate the NN
+            Results = new List<Output>();                 // Create the list of results
+            for (int i = 0; i < Outputs; i++)
+            {
+                Output t = new Output();
+                t.ID = i;
+                t.Value = _outputs[i];
+                Results.Add(t);
+            }
+            Results.Sort();                                     // Sort the list of results
+            currentState = (State)Results[Results.Count - 1].ID;  // Set the result
+        }
+        else
+        {
+            currentState = State.Dead;
+        }
 
         // Run the current state
         switch (currentState)
@@ -121,6 +133,13 @@ public class CharacterController : AiBehaviour
             case State.Dead:
                 {
                     // Do nothing
+                    if(!Anim.GetBool("Dead"))
+                    {
+                        Anim.SetBool("Dead", true);
+                        Anim.Play("Base Layer.Dead");
+                        SendDeathEvent();
+                    }
+
                     SkinnedMeshRenderer[] skin = GetComponentsInChildren<SkinnedMeshRenderer>();
 
                     foreach (SkinnedMeshRenderer smr in skin)
@@ -130,7 +149,6 @@ public class CharacterController : AiBehaviour
 
                     AIAgent.isStopped = true;
                     GetComponentInChildren<Text>().text = "Dead";
-                    enabled = false;
 
                     // Bots can no longer gain fitness whilst dead
                     NController.Network.AddFitness(-Stats.happiness);
@@ -145,8 +163,19 @@ public class CharacterController : AiBehaviour
     // A nearby robot has been hit
     public void OnHitEvent(object source, PublicEventArgs args)
     {
+        Debug.Log("Here");
+        if(args.Agent == null || args.Subject == null)
+        {
+            return;
+        }
+
         CharacterStats agentStats = args.Agent.GetComponent<CharacterStats>();
         CharacterStats subjectStats = args.Subject.GetComponent<CharacterStats>();
+
+        if (agentStats == null || subjectStats == null)
+        {
+            return;
+        }
 
         // If the bot is in range of the event
         if (Vector3.Distance(args.Agent.transform.position, gameObject.transform.position) < args.Range
@@ -157,9 +186,10 @@ public class CharacterController : AiBehaviour
                 default:
                 case Factions.Neutral:
                     {
-                        NController._eventCount += 5.0f;
+                        NController._eventCount = 1.0f;
                         NController.target = args.Agent;
-                        Stats.fear += 10.0f;
+                        NController._eventType = EventType.Hit;
+                        Stats.fear += 1.0f;
                         break;
                     }
                 case Factions.Barbarians:
@@ -171,18 +201,62 @@ public class CharacterController : AiBehaviour
                         }
                         else
                         {
-                            NController._eventCount += 5.0f;
+                            NController._eventCount = 1.0f;
                             NController.target = args.Agent;
                         }
                         break;
                     }
                 case Factions.Guards:
                     {
-                        Stats.anger += 10.0f;
-                        CController.SetTarget(args.Agent);
+                        if(agentStats.faction != Factions.Guards)
+                        {
+                            Stats.anger += 10.0f;
+                            CController.SetTarget(args.Agent);
+                        }                       
                         break;
                     }
             }
+        }
+    }
+
+    public void OnDeathEvent(object source, PublicEventArgs args)
+    {
+        // If the bot is in range of the event && they didn't trigger it
+        if (Vector3.Distance(args.Agent.transform.position, gameObject.transform.position) < args.Range
+            && args.Agent != gameObject)
+        {
+            switch (Stats.faction)
+            {
+                default:
+                case Factions.Neutral:
+                    {
+                        // Flee
+                        NController._eventCount = 1.0f;
+                        NController._eventType = EventType.Death;
+                        NController.target = GameObject.FindGameObjectWithTag("Exit");
+                        Stats.fear += 10.0f;
+                        break;
+                    }
+                case Factions.Barbarians:
+                    {
+                        // Barbarians do not care for mortal death
+                        break;
+                    }
+                case Factions.Guards:
+                    {
+                        // Call for backup
+                        break;
+                    }
+            }
+        }
+    }
+
+    protected virtual void SendDeathEvent()
+    {
+        if (DeathEvent != null)
+        {
+            PublicEventArgs args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
+            DeathEvent(this, args);
         }
     }
 }

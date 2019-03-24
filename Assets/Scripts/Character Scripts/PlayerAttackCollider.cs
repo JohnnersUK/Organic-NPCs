@@ -48,7 +48,7 @@ public class PlayerAttackCollider : MonoBehaviour
         {
             Debug.Log("Hit " + other.name);
 
-            other.GetComponent<CharacterStats>().GetHit(this.gameObject, stats.damage);
+            other.GetComponent<CharacterStats>().GetHit(GetComponent<Transform>().root.gameObject, stats.damage);
             other.GetComponent<Animator>().Play("Base Layer.Combat.Hit.Hit " + UnityEngine.Random.Range(0,4));
 
             col.enabled = false;
@@ -62,7 +62,7 @@ public class PlayerAttackCollider : MonoBehaviour
     {
         if (HitEvent != null)
         {
-            PublicEventArgs args = new PublicEventArgs(this.transform.root.gameObject, other.transform.root.gameObject, EventType.Hit, 10);
+            PublicEventArgs args = new PublicEventArgs(this.transform.root.gameObject, other.transform.root.gameObject, EventType.Hit, 50);
             HitEvent(this, args);
         }
     }

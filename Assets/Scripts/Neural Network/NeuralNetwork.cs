@@ -6,122 +6,138 @@ using UnityEngine;
 [Serializable]
 public class NeuralNetwork : IComparable<NeuralNetwork>
 {
-    private int[] layers;
-    private float[][] neurons;
-    private float[][][] weights;
+    private int[] _layers;
+    private float[][] _neurons;
+    private float[][][] _weights;
 
-    public float fitness; 
+    public float fitness;
 
+    public string name;
 
     // Initilize a new network
-    public NeuralNetwork(int[] layout)
+    public NeuralNetwork(int[] layout, string n = "Default")
     {
-        layers = new int[layout.Length];
-        for (int i = 0; i < layers.Length; i++)
+        _layers = new int[layout.Length];
+        for (int i = 0; i < _layers.Length; i++)
         {
-            layers[i] = layout[i];
+            _layers[i] = layout[i];
         }
 
         // Initilize the neurons
-        List<float[]> neuronsList = new List<float[]>();
+        List<float[]> neurons = new List<float[]>();
 
-        for (int i = 0; i < layers.Length; i++) //run through the layers
+        for (int i = 0; i < _layers.Length; i++)
         {
-            neuronsList.Add(new float[layers[i]]); //add layer to neuron list
+            neurons.Add(new float[_layers[i]]);
         }
-        neurons = neuronsList.ToArray(); //convert list to array
+
+        //convert list to array for ease of use
+        _neurons = neurons.ToArray(); 
 
         // Initilize the Weights
-        List<float[][]> weightsList = new List<float[][]>();
+        List<float[][]> weights = new List<float[][]>();
 
-        for (int i = 1; i < layers.Length; i++) // Run through the layers
+        for (int i = 1; i < _layers.Length; i++)
         {
-            List<float[]> layerWeightsList = new List<float[]>();
+            List<float[]> layerWeights = new List<float[]>();
 
-            int neuronsInPreviousLayer = layers[i - 1];
+            // Get the neurons in the previous layer
+            int NiP = _layers[i - 1];
 
-            for (int j = 0; j < neurons[i].Length; j++) // Run through neurons in current layer
+            for (int j = 0; j < _neurons[i].Length; j++)
             {
-                float[] neuronWeights = new float[neuronsInPreviousLayer];
+                // Randomize their weights
+                float[] neuronWeights = new float[NiP];
 
-                for (int k = 0; k < neuronsInPreviousLayer; k++) // Run through neurons in previous layer
+                for (int k = 0; k < NiP; k++)
                 {
-                    neuronWeights[k] = UnityEngine.Random.Range(-0.5f, 0.5f); // Give random weights
+                    neuronWeights[k] = UnityEngine.Random.Range(-1f, 1f);
                 }
 
-                layerWeightsList.Add(neuronWeights); // Add neuron weights to layer weights
+                layerWeights.Add(neuronWeights);
             }
 
-            weightsList.Add(layerWeightsList.ToArray()); // Add layers weights into weights list
+            weights.Add(layerWeights.ToArray());
         }
-        weights = weightsList.ToArray(); // Convert to array
+
+        //convert list to array for ease of use
+        _weights = weights.ToArray();
+
+        name = n;
     }
 
 
     // Run data through the NN
     public float[] Run(float[] inputs)
     {
-        // Feed inputs into the NN
+        // pass inputs into the network
         for (int i = 0; i < inputs.Length; i++)
         {
-            neurons[0][i] = inputs[i];
+            _neurons[0][i] = inputs[i];
         }
 
-        // Itterate over the network
-        for (int i = 1; i < layers.Length; i++)
+        // run through the network
+        for (int i = 1; i < _layers.Length; i++)
         {
-            for (int j = 0; j < neurons[i].Length; j++)
+            for (int j = 0; j < _neurons[i].Length; j++)
             {
                 float value = 0f;
 
-                for (int k = 0; k < neurons[i - 1].Length; k++)
+                for (int k = 0; k < _neurons[i - 1].Length; k++)
                 {
-                    value += weights[i - 1][j][k] * neurons[i - 1][k]; // Sum off all weights connections of this neuron weight their values in previous layer
+                    // Sum off all weights connections of this neuron weight their values in previous layer
+                    value += _weights[i - 1][j][k] * _neurons[i - 1][k]; 
                 }
 
-                neurons[i][j] = (float)Math.Tanh(value); // Tanh activation
+                // Tanh activation for simplistic classification
+                _neurons[i][j] = (float)Math.Tanh(value); 
             }
         }
 
-        return neurons[neurons.Length - 1]; // Return output layer
+        // Return the outputs
+        return _neurons[_neurons.Length - 1];
     }
 
 
-    // Mutate weights
+    // Mutate the weights
     public void Mutate()
     {
-        for (int i = 0; i < weights.Length; i++)
+        for (int i = 0; i < _weights.Length; i++)
         {
-            for (int j = 0; j < weights[i].Length; j++)
+            for (int j = 0; j < _weights[i].Length; j++)
             {
-                for (int k = 0; k < weights[i][j].Length; k++)
+                for (int k = 0; k < _weights[i][j].Length; k++)
                 {
-                    float weight = weights[i][j][k];
+                    float currentWeight = _weights[i][j][k];
 
-                    int rnd = Mathf.RoundToInt(UnityEngine.Random.Range(0f, 4f));
-                    switch (rnd)
+                    int rand = UnityEngine.Random.Range(0, 4);
+                    switch (rand)
                     {
-                        default:    //Completely reroll the weight
+                        default:    
                         case 0:
                             {
-                                weight = UnityEngine.Random.Range(-0.5f, 0.5f);
+                                //Reroll the weight
+                                currentWeight = UnityEngine.Random.Range(-1f, 1f);
                                 break;
                             }
 
-                        case 1:     // Change the sign of the weight
+                        case 1:     
                             {
-                                weight *= -1f;
+                                // Change the sign of the weight
+                                currentWeight *= -1f;
                                 break;
                             }
-                        case 3:     // Add or take away 0-50% of the weight
+                        case 3:     
                             {
+                                // Add or take away 0-50% of the weight
                                 float change = UnityEngine.Random.Range(0.5f, 1.5f);
-                                weight *= change;
+                                currentWeight *= change;
                                 break;
                             }
                     }
 
-                    weights[i][j][k] = weight;
+                    // Set the new weight
+                    _weights[i][j][k] = currentWeight;
                 }
             }
         }
@@ -138,13 +154,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public void SetWeights(float[][][] w)
     {
-        weights = w;
+        _weights = w;
     }
 
 
     public float[][][] GetWeights()
     {
-        return weights;
+        return _weights;
     }
 
 
@@ -161,6 +177,6 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public float[][] GetNeurons()
     {
-        return neurons;
+        return _neurons;
     }
 }
