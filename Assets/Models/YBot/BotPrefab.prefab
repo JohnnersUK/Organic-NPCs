@@ -2561,11 +2561,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Network:
     fitness: 0
+    name: 
   Inputs:
-  - happiness
   - anger
-  HiddenLayers: 0200000002000000
+  HiddenLayers: 02000000
   Outputs: 2
+  _outputs: []
   InCombat: 0
   dead: {fileID: 2100000, guid: ee9b4d3241ecc0c498577431cf222c23, type: 2}
 --- !u!114 &114159856779782752
@@ -2581,6 +2582,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Network:
     fitness: 0
+    name: 
   Inputs:
   - hunger
   - boredom
@@ -2590,10 +2592,12 @@ MonoBehaviour:
   - health
   HiddenLayers: 04000000040000000400000004000000
   Outputs: 4
+  _outputs: []
   target: {fileID: 0}
   Using: 0
   _event: 0
   _eventCount: 0
+  _eventType: 0
 --- !u!114 &114234752497460744
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2607,12 +2611,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Network:
     fitness: 0
+    name: 
   Inputs:
   - health
   - stamina
   - damage
   HiddenLayers: 030000000300000003000000
   Outputs: 3
+  _outputs: []
   AttackCost: 2
   DodgeCost: 1
 --- !u!114 &114268925318110584
@@ -2677,6 +2683,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce7a80d520cacc042b5fe14f373d8173, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  running: 0
   m_MovingTurnSpeed: 360
   m_StationaryTurnSpeed: 180
   m_JumpPower: 12

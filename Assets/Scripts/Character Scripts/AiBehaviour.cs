@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
 
 public class AiBehaviour : MonoBehaviour
 {
@@ -25,6 +21,7 @@ public class AiBehaviour : MonoBehaviour
 
     public virtual void Start()
     {
+        th
         Stats = GetComponent<CharacterStats>();
         // Initilize the neural network
         int length = HiddenLayers.Length + 2;
@@ -51,6 +48,10 @@ public class AiBehaviour : MonoBehaviour
         {
             Debug.Log("Generating new network");
             Network = new NeuralNetwork(layout, gameObject.name);       // Construct the NN
+        }
+        if (true == true)
+        {
+
         }
     }
 

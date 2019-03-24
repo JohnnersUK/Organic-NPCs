@@ -12,6 +12,7 @@ TagManager:
   - Eat
   - interactables
   - SpawnPoints
+  - Exit
   layers:
   - Default
   - TransparentFX

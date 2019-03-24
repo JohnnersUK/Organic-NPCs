@@ -65,7 +65,9 @@ public class CharacterController : AiBehaviour
     public override void Update()
     {
         if (currentState == State.Dead)
+        {
             return;
+        }
 
         // If the AI Agent isn't at its target position, 
         // Call the move funciton in the TPS
@@ -133,7 +135,7 @@ public class CharacterController : AiBehaviour
             case State.Dead:
                 {
                     // Do nothing
-                    if(!Anim.GetBool("Dead"))
+                    if (!Anim.GetBool("Dead"))
                     {
                         Anim.SetBool("Dead", true);
                         Anim.Play("Base Layer.Dead");
@@ -164,7 +166,7 @@ public class CharacterController : AiBehaviour
     public void OnHitEvent(object source, PublicEventArgs args)
     {
         Debug.Log("Here");
-        if(args.Agent == null || args.Subject == null)
+        if (args.Agent == null || args.Subject == null)
         {
             return;
         }
@@ -194,7 +196,7 @@ public class CharacterController : AiBehaviour
                     }
                 case Factions.Barbarians:
                     {
-                        if(subjectStats.faction == Stats.faction)
+                        if (subjectStats.faction == Stats.faction)
                         {
                             Stats.anger += 10.0f;
                             CController.SetTarget(args.Agent);
@@ -208,11 +210,11 @@ public class CharacterController : AiBehaviour
                     }
                 case Factions.Guards:
                     {
-                        if(agentStats.faction != Factions.Guards)
+                        if (agentStats.faction != Factions.Guards)
                         {
                             Stats.anger += 10.0f;
                             CController.SetTarget(args.Agent);
-                        }                       
+                        }
                         break;
                     }
             }
