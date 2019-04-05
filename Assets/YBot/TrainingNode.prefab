@@ -70,11 +70,11 @@ MonoBehaviour:
   fear: 0
   hModifiers: []
   faction: 0
-  randomize: 0
-  reset: 0
+  iframes: 0.2
+  icount: 0
+  invincible: 0
   debug: 0
   rTime: 0
-  rCount: 0
   happy: {fileID: 0}
   sad: {fileID: 0}
 --- !u!114 &114572918358787500
