@@ -4,22 +4,22 @@ public class PlayerController : MonoBehaviour
 {
     // Public
     [Header("Movment settings:")]
-    public float walkSpeed = 2;
-    public float runSpeed = 6;
-    public float gravity = -12;
-    public float jumpHeight = 1;
+    [SerializeField] private float walkSpeed = 2f;
+    [SerializeField] private float runSpeed = 6f;
+    [SerializeField] private float gravity = -12f;
+    [SerializeField] private float jumpHeight = 1f;
     [Range(0, 1)]
-    public float airControlPercent;
+    [SerializeField] private float airControlPercent = 0.5f;
 
-    public float turnSmoothTime = 0.2f;
-    public float speedSmoothTime = 0.1f;
+    [SerializeField] private float turnSmoothTime = 0.2f;
+    [SerializeField] private float speedSmoothTime = 0.1f;
     [Space(10)]
-    public float jumpCost;
+    [SerializeField] public float jumpCost = 1f;
 
     [Header("Combat Settings:")]
-    public GameObject target;
-    public bool inCombat = false;
-    public float attackCost;
+    [SerializeField] private GameObject target;
+    [SerializeField] private bool inCombat = false;
+    [SerializeField] private float attackCost = 1f;
 
     // Private
     private float turnSmoothVelocity;
@@ -49,9 +49,13 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        Vector2 rawInput;
+        Vector2 inputDir;
+        Vector2 input;
+
         if (stats.GetStat("health") <= 0)
         {
-            if(dead)
+            if (dead)
             {
                 return;
             }
@@ -79,7 +83,7 @@ public class PlayerController : MonoBehaviour
         }
         anim.SetBool("inCombat", inCombat);
 
-        if(Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E))
         {
             Attack();
         }
@@ -90,14 +94,18 @@ public class PlayerController : MonoBehaviour
             if (target == null)
             {
                 // inputs
-                Vector2 rawInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-                Vector2 inputDir = rawInput.normalized;
+                rawInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+                inputDir = rawInput.normalized;
 
                 bool running;
                 if (stats.GetStat("stamina") > 0)
+                {
                     running = Input.GetKey(KeyCode.LeftShift);
+                }
                 else
+                {
                     running = false;
+                }
 
                 Move(inputDir, running);
 
@@ -113,7 +121,7 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+                input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
                 CombatMove(input);
 
                 // animation
@@ -126,25 +134,31 @@ public class PlayerController : MonoBehaviour
     // Default movment mode
     void Move(Vector2 inputDir, bool running)
     {
+        float targetRotation;
+        float targetSpeed;
+        Vector3 velocity;
+
         // Rotation
         if (inputDir != Vector2.zero)
         {
-            float targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + camT.eulerAngles.y;
+            targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + camT.eulerAngles.y;
             transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, GetModifiedSmoothTime(turnSmoothTime));
         }
 
         // Position
-        float targetSpeed = ((running) ? runSpeed : walkSpeed) * inputDir.magnitude;
+        targetSpeed = ((running) ? runSpeed : walkSpeed) * inputDir.magnitude;
         currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, GetModifiedSmoothTime(speedSmoothTime));
 
         yVel += Time.deltaTime * gravity;
-        Vector3 velocity = transform.forward * currentSpeed + Vector3.up * yVel;
+        velocity = transform.forward * currentSpeed + Vector3.up * yVel;
 
         cc.Move(velocity * Time.deltaTime);
 
         currentSpeed = new Vector2(cc.velocity.x, cc.velocity.z).magnitude;
         if (running && currentSpeed > 0)
+        {
             stats.ModifyStat("stamina", -Time.deltaTime);
+        }
 
         if (cc.isGrounded)
         {
@@ -161,6 +175,8 @@ public class PlayerController : MonoBehaviour
     // Combat movment mode
     void CombatMove(Vector2 input)
     {
+        Vector3 velocity;
+
         // Rotation
         transform.LookAt(target.transform.position);
         transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
@@ -169,7 +185,7 @@ public class PlayerController : MonoBehaviour
         yVel += Time.deltaTime * gravity;
         input *= walkSpeed;
 
-        Vector3 velocity = transform.forward * input.y + transform.right * input.x + Vector3.up * yVel;
+        velocity = transform.forward * input.y + transform.right * input.x + Vector3.up * yVel;
 
         cc.Move(velocity * Time.deltaTime);
 
@@ -195,13 +211,15 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    
+
     void Jump()
     {
+        float jumpVelocity;
+
         if (cc.isGrounded && stats.GetStat("stamina") > 0)
         {
             anim.SetBool("Grounded", false);
-            float jumpVelocity = Mathf.Sqrt(-2 * gravity * jumpHeight);
+            jumpVelocity = Mathf.Sqrt(-2 * gravity * jumpHeight);
             yVel = jumpVelocity;
 
             stats.ModifyStat("stamina", -jumpCost);
@@ -226,9 +244,9 @@ public class PlayerController : MonoBehaviour
     // Gets the closest target
     void GetTarget()
     {
+        RaycastHit hit;
 
         // Get the bot the player is looking at
-        RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity))
         {
             if (hit.transform.gameObject.tag == "character")
@@ -263,9 +281,11 @@ public class PlayerController : MonoBehaviour
 
     protected virtual void SendDeathEvent()
     {
+        PublicEventArgs args;
+
         if (DeathEvent != null)
         {
-            PublicEventArgs args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
+            args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
             DeathEvent(this, args);
         }
     }
