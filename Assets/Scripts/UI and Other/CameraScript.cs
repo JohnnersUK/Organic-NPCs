@@ -10,12 +10,17 @@ public class CameraScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        float distance;
+        float fov;
+
         if (Target == null)
+        {
             Target = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
+        }
         else
         {
-            float distance = Vector3.Distance(this.transform.position, Target.transform.position);
-            float fov = 100 - (distance * 3);
+            distance = Vector3.Distance(transform.position, Target.transform.position);
+            fov = 100 - (distance * 3);
 
             GetComponent<Camera>().fieldOfView = fov;
             transform.LookAt(Target);

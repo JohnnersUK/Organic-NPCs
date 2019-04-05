@@ -1,7 +1,5 @@
 ﻿using System.IO;
-using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
 
 using UnityEngine;
 
@@ -12,9 +10,13 @@ public class NetworkIO : MonoBehaviour
     void Awake()
     {
         if (instance == null)
+        {
             instance = this;
+        }
         else if (instance != this)
+        {
             Destroy(gameObject);
+        }
     }
 
     // Save a network as a binary file
@@ -22,6 +24,7 @@ public class NetworkIO : MonoBehaviour
     {
         Stream stream = File.Open(filename, FileMode.Create);
         BinaryFormatter binaryFormatter = new BinaryFormatter();
+
         binaryFormatter.Serialize(stream, obj);
         stream.Close();
     }
@@ -30,10 +33,13 @@ public class NetworkIO : MonoBehaviour
     public T DeSerializeObject<T>(string filename)
     {
         T objectToBeDeSerialized;
+
         Stream stream = File.Open(filename, FileMode.Open);
         BinaryFormatter binaryFormatter = new BinaryFormatter();
+
         objectToBeDeSerialized = (T)binaryFormatter.Deserialize(stream);
         stream.Close();
+
         return objectToBeDeSerialized;
     }
 }

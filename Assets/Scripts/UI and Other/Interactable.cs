@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Interactable : MonoBehaviour
 {
-    public bool Occupied = false;
+    public bool Occupied;
 
     public string Type;
     public List<Factions> _Factions;
@@ -13,6 +13,6 @@ public class Interactable : MonoBehaviour
     private void Start()
     {
         Type = gameObject.tag;
+        Occupied = false;
     }
-
 }

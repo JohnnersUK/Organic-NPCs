@@ -9,8 +9,8 @@ using UnityEngine.SceneManagement;
 public class EventManager : MonoBehaviour
 {
     public static EventManager instance = null;
-    [SerializeField] private NetworkTrainingScript nts;
-    [SerializeField] private ResetPlayer rp;
+    [SerializeField] private NetworkTrainingScript nts = null;
+    [SerializeField] private ResetPlayer rp = null;
 
     private bool playerLoaded = false;
 
@@ -49,7 +49,7 @@ public class EventManager : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         // Find the bots and add them to the public event listener
-        foreach (GameObject b in nts.bots)
+        foreach (GameObject b in nts.Bots)
         {
             // Get the death event
             b.GetComponent<AgentController>().DeathEvent += OnPublicEvent;

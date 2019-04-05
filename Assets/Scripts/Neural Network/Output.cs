@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 
 
 public class Output : IComparable<Output>
@@ -13,10 +11,13 @@ public class Output : IComparable<Output>
 
     public int CompareTo(Output other)
     {
-        if (other == null) return 1;
+        if (other == null)
+        {
+            return 1;
+        }
         else
         {
-            return this.Value.CompareTo(other.Value);
+            return Value.CompareTo(other.Value);
         }
     }
 

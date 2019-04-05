@@ -13,35 +13,34 @@ public class NetworkTrainingScript : MonoBehaviour
     }
 
     // Public
-    public static NetworkTrainingScript instance { get; private set; }
+    public static NetworkTrainingScript Instance { get; private set; }
 
     public List<AiBehaviour> _Behaviours { get; private set; }
 
-    public bool intensiveTraining = false;
-    public int itCount = 0;
+    [SerializeField] private bool intensiveTraining = false;
+    [SerializeField] private int itCount = 0;
 
     [Header("Simulation Settings:")]
     [SerializeField] Networks trainingNetwork = 0;
 
-    public int simultaionNum;
+    [SerializeField] private int simultaionNum = 0;
 
     [Range(1, 20)]
-    public float simulationSpeed = 1.0f;
+    [SerializeField] private float simulationSpeed = 1.0f;
 
-    public float simulationTime = 300;
+    [SerializeField] private float simulationTime = 300;
 
-    public GameObject botPrefab;
-    public GameObject nodePrefab;
+    [SerializeField] private GameObject botPrefab = null;
+    [SerializeField] private GameObject nodePrefab = null;
 
     [Header("Storage:")]
-    public string fileName = "data.json";
-    public bool loadWeights = false;
-    public bool saveWeights = false;
+    [SerializeField] private string fileName = "data.json";
+    [SerializeField] private bool saveWeights = false;
 
     // Private
-    private Transform[] spawnPoints;
-    public GameObject[] bots;
-    public GameObject[] nodes;
+    private Transform[] spawnPoints = null;
+    [SerializeField] public GameObject[] Bots { get; private set; }
+    [SerializeField] private GameObject[] nodes;
 
     private Interactable[] objects;
 
@@ -52,6 +51,9 @@ public class NetworkTrainingScript : MonoBehaviour
     // Use this for initialization
     public void Start()
     {
+        GameObject interactables;
+        GameObject tsp;
+
         DontDestroyOnLoad(gameObject);
         foreach (NetworkTrainingScript im in FindObjectsOfType<NetworkTrainingScript>())
         {
@@ -61,71 +63,71 @@ public class NetworkTrainingScript : MonoBehaviour
             }
         }
 
-        instance = this;
+        Instance = this;
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         int i = 0;
 
         simultaionNum = 1;
 
-        GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
+        interactables = GameObject.FindGameObjectWithTag("interactables");
         objects = interactables.GetComponentsInChildren<Interactable>();
 
         count = simulationTime;
 
         Time.timeScale = simulationSpeed;
 
-        GameObject tsp = GameObject.FindGameObjectWithTag("SpawnPoints");
+        tsp = GameObject.FindGameObjectWithTag("SpawnPoints");
         spawnPoints = tsp.GetComponentsInChildren<Transform>();
 
-        bots = new GameObject[spawnPoints.Length];
+        Bots = new GameObject[spawnPoints.Length];
         _Behaviours = new List<AiBehaviour>();
 
         foreach (Transform T in spawnPoints)
         {
             // Initilize the bots and assign a faction
-            bots[i] = Instantiate(botPrefab, T.position, T.rotation);
-            bots[i].GetComponent<CharacterStats>().faction = (Factions)Random.Range(0, 3);
+            Bots[i] = Instantiate(botPrefab, T.position, T.rotation);
+            Bots[i].GetComponent<CharacterStats>().faction = (Factions)Random.Range(0, 3);
 
             switch (trainingNetwork)
             {
                 case Networks.CombatNetwork:
-                    _Behaviours.Add(bots[i].GetComponent<CombatController>());
-                    bots[i].GetComponent<CombatController>().Start();
-                    break;
+                _Behaviours.Add(Bots[i].GetComponent<CombatController>());
+                Bots[i].GetComponent<CombatController>().Start();
+                break;
                 case Networks.MasterNetwork:
-                    _Behaviours.Add(bots[i].GetComponent<AgentController>());
-                    bots[i].GetComponent<AgentController>().Start();
-                    break;
+                _Behaviours.Add(Bots[i].GetComponent<AgentController>());
+                Bots[i].GetComponent<AgentController>().Start();
+                break;
                 case Networks.NeedsNetwork:
-                    _Behaviours.Add(bots[i].GetComponent<NeedsController>());
-                    bots[i].GetComponent<NeedsController>().Start();
-                    break;
+                _Behaviours.Add(Bots[i].GetComponent<NeedsController>());
+                Bots[i].GetComponent<NeedsController>().Start();
+                break;
             }
 
             // name and color the bot to make it identifiable
-            bots[i].name = "bot " + i + " " + bots[i].GetComponent<CharacterStats>().faction.ToString();
-            foreach (SkinnedMeshRenderer smr in bots[i].GetComponentsInChildren<SkinnedMeshRenderer>())
+            Bots[i].name = "bot " + i + " " + Bots[i].GetComponent<CharacterStats>().faction.ToString();
+            foreach (SkinnedMeshRenderer smr in Bots[i].GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 if (smr.material.color == new Color(0.09657001f, 0.4216198f, 0.522f, 1))
                 {
-                    switch (bots[i].GetComponent<CharacterStats>().faction)
+                    switch (Bots[i].GetComponent<CharacterStats>().faction)
                     {
                         case Factions.Neutral:
-                            {
-                                smr.material.color = Color.white;
-                                break;
-                            }
+                        {
+                            smr.material.color = Color.white;
+                            break;
+                        }
                         case Factions.Barbarians:
-                            {
-                                smr.material.color = Color.red;
-                                break;
-                            }
+                        {
+                            smr.material.color = Color.red;
+                            break;
+                        }
                         case Factions.Guards:
-                            {
-                                smr.material.color = Color.blue;
-                                break;
-                            }
+                        {
+                            smr.material.color = Color.blue;
+                            break;
+                        }
                     }
                 }
             }
@@ -168,11 +170,11 @@ public class NetworkTrainingScript : MonoBehaviour
 
     void StartNewRound()
     {
-        EventManager.instance.OnRoundStart();
-
         int i, k;
         List<NeuralNetwork> networks = new List<NeuralNetwork>();
         tempWeights = new List<float[][][]>();
+
+        EventManager.instance.OnRoundStart();
 
         foreach (AiBehaviour b in _Behaviours)
         {
@@ -200,9 +202,9 @@ public class NetworkTrainingScript : MonoBehaviour
             tempWeights.Add(networks[k].GetWeights());
         }
 
-        for(i = bots.Length-1; i >= 0; i--)
+        for (i = Bots.Length - 1; i >= 0; i--)
         {
-            Destroy(bots[i]);
+            Destroy(Bots[i]);
         }
 
         for (i = nodes.Length - 1; i >= 0; i--)
@@ -251,6 +253,9 @@ public class NetworkTrainingScript : MonoBehaviour
     {
         CharacterStats s;
         AiBehaviour ab;
+
+        List<Output> Results;
+
         foreach (GameObject n in nodes)
         {
             // Get necesary components
@@ -262,7 +267,7 @@ public class NetworkTrainingScript : MonoBehaviour
             ab.Update();
 
             // Evaluate the outputs
-            List<Output> Results = ab.Results;
+            Results = ab.Results;
 
             Results.Sort();
 
@@ -270,14 +275,14 @@ public class NetworkTrainingScript : MonoBehaviour
             switch (trainingNetwork)
             {
                 case Networks.CombatNetwork:
-                    EvaluateCombat(s, ab, Results);
-                    break;
+                EvaluateCombat(s, ab, Results);
+                break;
                 case Networks.NeedsNetwork:
-                    EvaluateNeeds(s, ab, Results);
-                    break;
+                EvaluateNeeds(s, ab, Results);
+                break;
                 case Networks.MasterNetwork:
-                    EvaluateMaster(s, ab, Results);
-                    break;
+                EvaluateMaster(s, ab, Results);
+                break;
             }
         }
     }
@@ -288,24 +293,32 @@ public class NetworkTrainingScript : MonoBehaviour
         {
             // Idle
             case 0:
+            {
+                if (s.GetStat("anger") > 0)
                 {
-                    if (s.GetStat("anger") > 0)
-                        ab.Network.AddFitness(-1);
-                    else
-                        ab.Network.AddFitness(1);
-
-                    break;
+                    ab.Network.AddFitness(-1);
                 }
+                else
+                {
+                    ab.Network.AddFitness(1);
+                }
+
+                break;
+            }
             // Combat
             case 1:
+            {
+                if (s.GetStat("anger") > 0)
                 {
-                    if (s.GetStat("anger") > 0)
-                        ab.Network.AddFitness(1);
-                    else
-                        ab.Network.AddFitness(-1);
-
-                    break;
+                    ab.Network.AddFitness(1);
                 }
+                else
+                {
+                    ab.Network.AddFitness(-1);
+                }
+
+                break;
+            }
         }
     }
 
@@ -316,44 +329,44 @@ public class NetworkTrainingScript : MonoBehaviour
 
     void EvaluateCombat(CharacterStats s, AiBehaviour ab, List<Output> Results)
     {
-        
+
         switch (Results[Results.Count - 1].ID)
         {
             // Attack
             case 0:
-                {
-                    // If the bot is attacking give them a point
-                    ab.Network.AddFitness(5);
-                    break;
-                }
+            {
+                // If the bot is attacking give them a point
+                ab.Network.AddFitness(5);
+                break;
+            }
             // Dodge
             case 1:
+            {
+                // If the bot is dodging and low on hp give them 5 points
+                if (s.GetStat("health") <= s.maxHealth * 0.1)
                 {
-                    // If the bot is dodging and low on hp give them 5 points
-                    if (s.GetStat("health") <= s.maxHealth * 0.1)
-                    {
-                        ab.Network.AddFitness(5);
-                    }
-                    else // Otherwise take away a point
-                    {
-                        ab.Network.AddFitness(-10);
-                    }
-                    break;
+                    ab.Network.AddFitness(5);
                 }
+                else // Otherwise take away a point
+                {
+                    ab.Network.AddFitness(-10);
+                }
+                break;
+            }
             // Wait
             case 2:
+            {
+                // If the bot is low on stamina and waiting gove them 5 points
+                if (s.GetStat("stamina") < 2)
                 {
-                    // If the bot is low on stamina and waiting gove them 5 points
-                    if (s.GetStat("stamina") < 2)
-                    {
-                        ab.Network.AddFitness(5);
-                    }
-                    else  // Otherwise take away a point
-                    {
-                        ab.Network.AddFitness(-10);
-                    }
-                    break;
+                    ab.Network.AddFitness(5);
                 }
+                else  // Otherwise take away a point
+                {
+                    ab.Network.AddFitness(-10);
+                }
+                break;
+            }
         }
     }
 }

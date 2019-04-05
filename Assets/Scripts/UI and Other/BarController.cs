@@ -1,40 +1,41 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
+﻿
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BarController : MonoBehaviour
 {
-    public GameObject Player;
-    CharacterStats PlayerStats;
+    [SerializeField] private GameObject Player;
+    private CharacterStats PlayerStats;
 
-    public Image Health;
-    public Image Stamina;
+    [SerializeField] private Image Health = null;
+    [SerializeField] private Image Stamina = null;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player");
 
         if (Player != null)
+        {
             PlayerStats = Player.GetComponent<CharacterStats>();
-	}
-	
-	// Update is called once per frame
-	void Update ()
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         if (Player == null)
         {
             Player = GameObject.FindGameObjectWithTag("Player");
             if (Player != null)
+            {
                 PlayerStats = Player.GetComponent<CharacterStats>();
+            }
         }
         else
         {
             Health.fillAmount = PlayerStats.GetStat("health") / PlayerStats.maxHealth;
             Stamina.fillAmount = PlayerStats.GetStat("stamina") / PlayerStats.maxStamina;
         }
-
     }
 }

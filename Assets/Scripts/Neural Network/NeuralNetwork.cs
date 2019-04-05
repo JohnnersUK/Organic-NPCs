@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using UnityEngine;
-
 [Serializable]
 public class NeuralNetwork : IComparable<NeuralNetwork>
 {
@@ -17,6 +15,14 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     // Initilize a new network
     public NeuralNetwork(int[] layout, string n = "Default")
     {
+        List<float[]> neurons;
+        List<float[][]> weights;
+        List<float[]> layerWeights;
+
+        int NiP;
+
+        float[] neuronWeights;
+
         _layers = new int[layout.Length];
         for (int i = 0; i < _layers.Length; i++)
         {
@@ -24,7 +30,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
 
         // Initilize the neurons
-        List<float[]> neurons = new List<float[]>();
+        neurons = new List<float[]>();
 
         for (int i = 0; i < _layers.Length; i++)
         {
@@ -32,22 +38,22 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         }
 
         //convert list to array for ease of use
-        _neurons = neurons.ToArray(); 
+        _neurons = neurons.ToArray();
 
         // Initilize the Weights
-        List<float[][]> weights = new List<float[][]>();
+        weights = new List<float[][]>();
 
         for (int i = 1; i < _layers.Length; i++)
         {
-            List<float[]> layerWeights = new List<float[]>();
+            layerWeights = new List<float[]>();
 
             // Get the neurons in the previous layer
-            int NiP = _layers[i - 1];
+            NiP = _layers[i - 1];
 
             for (int j = 0; j < _neurons[i].Length; j++)
             {
                 // Randomize their weights
-                float[] neuronWeights = new float[NiP];
+                neuronWeights = new float[NiP];
 
                 for (int k = 0; k < NiP; k++)
                 {
@@ -70,8 +76,12 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     // Run data through the NN
     public List<Output> Run(float[] inputs)
     {
+        float value;
         float[] rawOutputs;
+
+        Output temp;
         List<Output> outputs;
+
         // pass inputs into the network
         for (int i = 0; i < inputs.Length; i++)
         {
@@ -83,16 +93,16 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         {
             for (int j = 0; j < _neurons[i].Length; j++)
             {
-                float value = 0f;
+                value = 0f;
 
                 for (int k = 0; k < _neurons[i - 1].Length; k++)
                 {
                     // Sum off all weights connections of this neuron weight their values in previous layer
-                    value += _weights[i - 1][j][k] * _neurons[i - 1][k]; 
+                    value += _weights[i - 1][j][k] * _neurons[i - 1][k];
                 }
 
                 // Tanh activation for simplistic classification
-                _neurons[i][j] = (float)Math.Tanh(value); 
+                _neurons[i][j] = (float)Math.Tanh(value);
             }
         }
         rawOutputs = _neurons[_neurons.Length - 1];
@@ -100,7 +110,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         outputs = new List<Output>();
         for (int i = 0; i < rawOutputs.Length; i++)
         {
-            Output temp = new Output
+            temp = new Output
             {
                 ID = i,
                 Value = rawOutputs[i]
@@ -116,6 +126,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     // Mutate the weights
     public void Mutate()
     {
+        int rand;
+
         for (int i = 0; i < _weights.Length; i++)
         {
             for (int j = 0; j < _weights[i].Length; j++)
@@ -124,30 +136,30 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 {
                     float currentWeight = _weights[i][j][k];
 
-                    int rand = UnityEngine.Random.Range(0, 4);
+                    rand = UnityEngine.Random.Range(0, 4);
                     switch (rand)
                     {
-                        default:    
+                        default:
                         case 0:
-                            {
-                                //Reroll the weight
-                                currentWeight = UnityEngine.Random.Range(-1f, 1f);
-                                break;
-                            }
+                        {
+                            //Reroll the weight
+                            currentWeight = UnityEngine.Random.Range(-1f, 1f);
+                            break;
+                        }
 
-                        case 1:     
-                            {
-                                // Change the sign of the weight
-                                currentWeight *= -1f;
-                                break;
-                            }
-                        case 3:     
-                            {
-                                // Add or take away 0-50% of the weight
-                                float change = UnityEngine.Random.Range(0.5f, 1.5f);
-                                currentWeight *= change;
-                                break;
-                            }
+                        case 1:
+                        {
+                            // Change the sign of the weight
+                            currentWeight *= -1f;
+                            break;
+                        }
+                        case 3:
+                        {
+                            // Add or take away 0-50% of the weight
+                            float change = UnityEngine.Random.Range(0.5f, 1.5f);
+                            currentWeight *= change;
+                            break;
+                        }
                     }
 
                     // Set the new weight
@@ -159,10 +171,13 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
     public int CompareTo(NeuralNetwork other)
     {
-        if (other == null) return 1;
+        if (other == null)
+        {
+            return 1;
+        }
         else
         {
-            return this.GetFitness().CompareTo(other.GetFitness());
+            return GetFitness().CompareTo(other.GetFitness());
         }
     }
 

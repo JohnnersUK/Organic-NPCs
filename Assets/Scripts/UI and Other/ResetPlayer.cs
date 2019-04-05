@@ -1,18 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
+﻿
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class ResetPlayer : MonoBehaviour
 {
     [Header("Reset:")]
-    public bool resetPlayer;
+    [SerializeField] private bool resetPlayer;
 
     [Header("Player Setup:")]
     public GameObject player;
-    public GameObject playerPrefab;
-    public Transform spawn;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private Transform spawn;
 
     // Update is called once per frame
     public void Start()
@@ -30,9 +28,9 @@ public class ResetPlayer : MonoBehaviour
         player = Instantiate(playerPrefab, spawn.position, spawn.rotation);
     }
 
-    void Update ()
+    void Update()
     {
-		if (resetPlayer)
+        if (resetPlayer)
         {
             Destroy(player);
             player = null;
@@ -40,7 +38,7 @@ public class ResetPlayer : MonoBehaviour
             player = Instantiate(playerPrefab, spawn.position, spawn.rotation);
             resetPlayer = false;
         }
-	}
+    }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {

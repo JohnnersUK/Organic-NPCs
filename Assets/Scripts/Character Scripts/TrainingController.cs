@@ -8,9 +8,9 @@ public class TrainingController : AiBehaviour
     {
         name = "Training Node ";
 
-        Inputs = NetworkTrainingScript.instance._Behaviours[0].Inputs;
-        HiddenLayers = NetworkTrainingScript.instance._Behaviours[0].HiddenLayers;
-        Outputs = NetworkTrainingScript.instance._Behaviours[0].Outputs;
+        Inputs = NetworkTrainingScript.Instance._Behaviours[0].Inputs;
+        HiddenLayers = NetworkTrainingScript.Instance._Behaviours[0].HiddenLayers;
+        Outputs = NetworkTrainingScript.Instance._Behaviours[0].Outputs;
 
         // Set the filePath and init the network
         FilePath = Path.Combine(Application.streamingAssetsPath, "Default.nn");

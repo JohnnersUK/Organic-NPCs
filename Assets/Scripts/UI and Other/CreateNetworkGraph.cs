@@ -3,23 +3,22 @@ using UnityEngine.UI;
 
 public class CreateNetworkGraph : MonoBehaviour
 {
+    [SerializeField] private CombatController CC = null;
+    [SerializeField] private Sprite NodeSprite = null;
+    [SerializeField] private Font font = null;
 
-    public CombatController CC;
-    public Sprite NodeSprite;
-    public Font font;
+    [SerializeField] private GameObject[] InputLayer = null;
+    [SerializeField] private GameObject[][] HiddenLayer = null;
+    [SerializeField] private GameObject[] OutputLayer = null;
 
-    public GameObject[] InputLayer;
-    public GameObject[][] HiddenLayer;
-    public GameObject[] OutputLayer;
+    [SerializeField] private Transform UIAnchor = null;
 
-    public Transform UIAnchor;
+    [SerializeField] private int XOfset = 0;
+    [SerializeField] private int YOfset = 0;
 
-    public int XOfset;
-    public int YOfset;
-
-    private int inputs;
-    private int hiddenLayers;
-    private int outputs;
+    [SerializeField] private int inputs = 0;
+    [SerializeField] private int hiddenLayers = 0;
+    [SerializeField] private int outputs = 0;
 
     // Use this for initialization
     void Start()
@@ -80,25 +79,16 @@ public class CreateNetworkGraph : MonoBehaviour
         }
 
         OutputLayer[bestNode].GetComponent<Image>().color = new Color(0, 1, 0, 1);
-
-
-        // Log the actual node values for a 5 layer network
-        //Debug.Log("Inputs: " + NodeValues[0][0].ToString("F2") + " " + NodeValues[0][1].ToString("F2") + " " + NodeValues[0][2].ToString("F2"));
-
-        //Debug.Log("Hidden 1: " + NodeValues[1][0].ToString("F2") + " " + NodeValues[1][1].ToString("F2") + " " + NodeValues[1][2].ToString("F2"));
-
-        //Debug.Log("Hidden 2: " + NodeValues[2][0].ToString("F2") + " " + NodeValues[2][1].ToString("F2") + " " + NodeValues[2][2].ToString("F2"));
-
-        //Debug.Log("Hidden 3: " + NodeValues[3][0].ToString("F2") + " " + NodeValues[3][1].ToString("F2") + " " + NodeValues[3][2].ToString("F2"));
-
-        //Debug.Log("Outputs: " + NodeValues[4][0].ToString("F2") + " " + NodeValues[4][1].ToString("F2") + " " + NodeValues[4][2].ToString("F2"));
-
     }
 
     void InitInputLayer()
     {
         int count = 1;
+
         Vector3 Anchor = UIAnchor.position;
+        Vector3 newPos;
+        GameObject v;
+        Text t;
 
         InputLayer = new GameObject[inputs];
         for (int i = 0; i < inputs; i++)
@@ -111,9 +101,9 @@ public class CreateNetworkGraph : MonoBehaviour
         foreach (GameObject g in InputLayer)
         {
             // Set the default position
-            g.transform.parent = this.transform;
+            g.transform.parent = transform;
 
-            Vector3 newPos = new Vector3(Anchor.x, Anchor.y + (YOfset * count), Anchor.z);
+            newPos = new Vector3(Anchor.x, Anchor.y + (YOfset * count), Anchor.z);
             g.transform.position = newPos;
             g.transform.localScale /= 2;
 
@@ -122,12 +112,12 @@ public class CreateNetworkGraph : MonoBehaviour
             g.GetComponent<Image>().sprite = NodeSprite;
 
             // Add the text
-            GameObject v = new GameObject("Value");
+            v = new GameObject("Value");
             v.transform.parent = g.transform;
             v.transform.position = g.transform.position;
 
             // Configure the text
-            Text t = v.AddComponent(typeof(Text)) as Text;
+            t = v.AddComponent(typeof(Text)) as Text;
             t.font = font;
             t.text = v.name;
             t.color = new Color(0, 0, 0, 1);
@@ -140,6 +130,9 @@ public class CreateNetworkGraph : MonoBehaviour
     void InitHiddenLayer()
     {
         Vector3 Anchor = UIAnchor.position;
+        Vector3 newPos;
+        GameObject v;
+        Text t;
 
         // Construct the '2D' (Jagged) array
         HiddenLayer = new GameObject[CC.HiddenLayers.Length][];
@@ -153,9 +146,9 @@ public class CreateNetworkGraph : MonoBehaviour
             for (int x = 0; x < CC.HiddenLayers[y]; x++)
             {
                 HiddenLayer[y][x] = new GameObject("Hidden" + y + x);
-                HiddenLayer[y][x].transform.parent = this.transform;
+                HiddenLayer[y][x].transform.parent = transform;
 
-                Vector3 newPos = new Vector3(Anchor.x + (XOfset * (y + 2)), Anchor.y + (YOfset * (x + 1)), Anchor.z);
+                newPos = new Vector3(Anchor.x + (XOfset * (y + 2)), Anchor.y + (YOfset * (x + 1)), Anchor.z);
                 HiddenLayer[y][x].transform.position = newPos;
                 HiddenLayer[y][x].transform.localScale /= 2;
 
@@ -164,17 +157,16 @@ public class CreateNetworkGraph : MonoBehaviour
                 HiddenLayer[y][x].GetComponent<Image>().sprite = NodeSprite;
 
                 // Add the text
-                GameObject v = new GameObject("Value");
+                v = new GameObject("Value");
                 v.transform.parent = HiddenLayer[y][x].transform;
                 v.transform.position = HiddenLayer[y][x].transform.position;
 
                 // Configure the text
-                Text t = v.AddComponent(typeof(Text)) as Text;
+                t = v.AddComponent(typeof(Text)) as Text;
                 t.font = font;
                 t.text = v.name;
                 t.color = new Color(0, 0, 0, 1);
                 t.alignment = TextAnchor.MiddleCenter;
-
             }
         }
     }
@@ -182,7 +174,11 @@ public class CreateNetworkGraph : MonoBehaviour
     void InitOutputLayer()
     {
         int count = 1;
+
         Vector3 Anchor = UIAnchor.position;
+        Vector3 newPos;
+        GameObject v;
+        Text t;
 
         OutputLayer = new GameObject[outputs];
         for (int i = 0; i < outputs; i++)
@@ -195,9 +191,9 @@ public class CreateNetworkGraph : MonoBehaviour
         foreach (GameObject g in OutputLayer)
         {
             // Set the default position
-            g.transform.parent = this.transform;
+            g.transform.parent = transform;
 
-            Vector3 newPos = new Vector3(Anchor.x + (XOfset * (CC.HiddenLayers.Length + 3)), Anchor.y + (YOfset * count), Anchor.z);
+            newPos = new Vector3(Anchor.x + (XOfset * (CC.HiddenLayers.Length + 3)), Anchor.y + (YOfset * count), Anchor.z);
             g.transform.position = newPos;
             g.transform.localScale /= 2;
 
@@ -206,12 +202,12 @@ public class CreateNetworkGraph : MonoBehaviour
             g.GetComponent<Image>().sprite = NodeSprite;
 
             // Add the text
-            GameObject v = new GameObject("Value");
+            v = new GameObject("Value");
             v.transform.parent = g.transform;
             v.transform.position = g.transform.position;
 
             // Configure the text
-            Text t = v.AddComponent(typeof(Text)) as Text;
+            t = v.AddComponent(typeof(Text)) as Text;
             t.font = font;
             t.text = v.name;
             t.color = new Color(0, 0, 0, 1);

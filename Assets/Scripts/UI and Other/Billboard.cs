@@ -1,17 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class Billboard : MonoBehaviour {
+public class Billboard : MonoBehaviour
+{
 
-    public Transform target;
+    [SerializeField] private Transform target;
 
     private void Start()
     {
         target = Camera.main.transform;
     }
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
         transform.LookAt(target.position);
     }
