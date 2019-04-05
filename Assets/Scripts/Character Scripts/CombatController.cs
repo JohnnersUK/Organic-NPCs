@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 
-
 public class CombatController : AiBehaviour
 {
     public float AttackCost;
@@ -21,7 +20,7 @@ public class CombatController : AiBehaviour
     public override void Start()
     {
         // Set the filePath and init the network
-        filePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
+        FilePath = Path.Combine(Application.streamingAssetsPath, "CombatNetwork.nn");
         base.Start();
 
         // Get components
@@ -30,7 +29,7 @@ public class CombatController : AiBehaviour
         Stats = GetComponent<CharacterStats>();
     }
 
-    public override void Run()
+    public void Run()
     {
         while (CombatTarget == null)
         {

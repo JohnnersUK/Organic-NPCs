@@ -38,7 +38,7 @@ public class AgentController : AiBehaviour
     public override void Start()
     {
         // Set the filePath and init the network
-        filePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
+        FilePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
         base.Start();
 
         MainCam = Camera.main;

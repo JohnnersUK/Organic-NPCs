@@ -27,7 +27,7 @@ public class NeedsController : AiBehaviour
     public override void Start()
     {
         // Set the filePath and init the network
-        filePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
+        FilePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
         base.Start();
 
         // Get components
@@ -45,7 +45,7 @@ public class NeedsController : AiBehaviour
         Results = Network.Run(inputs);             // Pass them through the NN
     }
 
-    public override void Run()
+    public void Run()
     {
         // If there is an event taking place
         if (_eventCount > 0.0f)

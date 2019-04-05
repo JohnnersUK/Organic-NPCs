@@ -5,20 +5,23 @@ using UnityEngine.SceneManagement;
 
 public class NetworkTrainingScript : MonoBehaviour
 {
-    // Public
-    public enum Networks
+    enum Networks
     {
         NeedsNetwork = 0,
         CombatNetwork = 1,
         MasterNetwork = 2
     }
-    private List<AiBehaviour> _Behaviours;
+
+    // Public
+    public static NetworkTrainingScript instance { get; private set; }
+
+    public List<AiBehaviour> _Behaviours { get; private set; }
 
     public bool intensiveTraining = false;
     public int itCount = 0;
 
     [Header("Simulation Settings:")]
-    public Networks trainingNetwork;
+    [SerializeField] Networks trainingNetwork;
 
     public int simultaionNum;
 
@@ -57,6 +60,8 @@ public class NetworkTrainingScript : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+
+        instance = this;
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         int i = 0;
@@ -135,16 +140,9 @@ public class NetworkTrainingScript : MonoBehaviour
             {
                 // Init the training node
                 nodes[i] = Instantiate(nodePrefab, new Vector3(-10, -10, -10), new Quaternion());
-                nodes[i].name = "Training Node " + i;
-                AiBehaviour ab = nodes[i].GetComponent<AiBehaviour>();
+                nodes[i].GetComponent<TrainingController>().Start();
 
-                ab.Inputs = _Behaviours[0].Inputs;
-                ab.HiddenLayers = _Behaviours[0].HiddenLayers;
-                ab.Outputs = _Behaviours[0].Outputs;
-
-                nodes[i].GetComponent<AiBehaviour>().Start();
-
-                _Behaviours.Add(nodes[i].GetComponent<AiBehaviour>());
+                _Behaviours.Add(nodes[i].GetComponent<TrainingController>());
 
             }
         }

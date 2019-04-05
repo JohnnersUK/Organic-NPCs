@@ -19,8 +19,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4533813097921372}
-  - component: {fileID: 114824479838141574}
   - component: {fileID: 114271303011930682}
+  - component: {fileID: 114572918358787500}
   m_Layer: 0
   m_Name: TrainingNode
   m_TagString: Untagged
@@ -77,7 +77,7 @@ MonoBehaviour:
   rCount: 0
   happy: {fileID: 0}
   sad: {fileID: 0}
---- !u!114 &114824479838141574
+--- !u!114 &114572918358787500
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -85,13 +85,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1196723386811732}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f46b80dc179fa6745b793bf81265fba4, type: 3}
+  m_Script: {fileID: 11500000, guid: 0345609c1dc10524894a10f078751721, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Network:
-    fitness: 0
-    owner: {fileID: 0}
   Inputs: []
   HiddenLayers: 
   Outputs: 0
-  _outputs: []
