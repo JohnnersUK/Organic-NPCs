@@ -1,6 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.IO;
+
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
@@ -18,14 +18,18 @@ public class NeedsController : AiBehaviour
 
     private bool Using = false;
 
-    public bool _event = false;
-    public float _eventCount = 0.0f;
-    public EventType _eventType;
+    public float EventCounter { private get; set; }
+    public EventType EventType { private get; set; }
 
     private Stack ActionQueue = new Stack();
 
     public override void Start()
     {
+        GameObject interactables;
+
+        EventCounter = 0;
+        EventType = 0;
+
         // Set the filePath and init the network
         FilePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
         base.Start();
@@ -34,21 +38,25 @@ public class NeedsController : AiBehaviour
         Anim = GetComponent<Animator>();
         AIAgent = GetComponent<NavMeshAgent>();
 
-        GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
+        interactables = GameObject.FindGameObjectWithTag("interactables");
         Objects = interactables.GetComponentsInChildren<Interactable>();
     }
 
     public override void Update()
     {
+        float[] inputs;
+
         // Run the NN
-        float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
+        inputs = Stats.GetStats(Inputs);        // Update the inputs
         Results = Network.Run(inputs);             // Pass them through the NN
     }
 
     public void Run()
     {
+        QueueItem currentAction;
+
         // If there is an event taking place
-        if (_eventCount > 0.0f)
+        if (EventCounter > 0.0f)
         {
             ResolveEvent();
         }
@@ -65,7 +73,7 @@ public class NeedsController : AiBehaviour
 
             if (ActionQueue.Count > 0)
             {
-                QueueItem currentAction = ActionQueue.Peek() as QueueItem;
+                currentAction = ActionQueue.Peek() as QueueItem;
 
                 if (currentAction == null)
                 {
@@ -75,17 +83,17 @@ public class NeedsController : AiBehaviour
                 switch (currentAction.Action)
                 {
                     case "MoveTo":
-                        MoveTo(currentAction.Target);
-                        break;
+                    MoveTo(currentAction.Target);
+                    break;
                     case "Use":
-                        Use(currentAction.Target);
-                        break;
+                    Use(currentAction.Target);
+                    break;
                     case "LookAt":
-                        LookAtTarget();
-                        break;
+                    LookAtTarget();
+                    break;
                     case "Flee":
-                        Flee(currentAction.Target);
-                        break;
+                    Flee(currentAction.Target);
+                    break;
                 }
             }
         }
@@ -114,20 +122,20 @@ public class NeedsController : AiBehaviour
             {
                 // Eat
                 case 0:
-                    ActionTag = "Eat";
-                    break;
+                ActionTag = "Eat";
+                break;
                 // Sleep
                 case 1:
-                    ActionTag = "Sleep";
-                    break;
+                ActionTag = "Sleep";
+                break;
                 // Work
                 case 2:
-                    ActionTag = "Work";
-                    break;
+                ActionTag = "Work";
+                break;
                 // Recreational
                 case 3:
-                    ActionTag = "Recreational";
-                    break;
+                ActionTag = "Recreational";
+                break;
             }
 
             // Find closest object of that activity type
@@ -172,50 +180,50 @@ public class NeedsController : AiBehaviour
     {
         QueueItem currentAction;
 
-        switch (_eventType)
+        switch (EventType)
         {
             default:
             case EventType.Hit:
+            {
+                AIAgent.isStopped = true;
+                if (ActionQueue.Count == 0) // If theres nothing in the action queue
                 {
-                    AIAgent.isStopped = true;
-                    if (ActionQueue.Count == 0) // If theres nothing in the action queue
+                    Anim.Play("Base Layer.Grounded");
+                    ActionQueue.Push(new QueueItem("LookAt", Target));
+                }
+                else // If there is something in the queue
+                {
+                    currentAction = ActionQueue.Peek() as QueueItem;
+                    if (currentAction.Action != "LookAt" || currentAction.Action != "Flee")
                     {
                         Anim.Play("Base Layer.Grounded");
                         ActionQueue.Push(new QueueItem("LookAt", Target));
                     }
-                    else // If there is something in the queue
-                    {
-                        currentAction = ActionQueue.Peek() as QueueItem;
-                        if (currentAction.Action != "LookAt" || currentAction.Action != "Flee")
-                        {
-                            Anim.Play("Base Layer.Grounded");
-                            ActionQueue.Push(new QueueItem("LookAt", Target));
-                        }
-                    }
-
-                    _eventCount -= Time.deltaTime;
-                    if (_eventCount <= 0.0f)
-                    {
-                        currentAction = ActionQueue.Peek() as QueueItem;
-                        if (currentAction.Action == "LookAt")
-                        {
-                            ActionQueue.Pop();
-                        }
-                    }
-                    break;
                 }
-            case EventType.Death:
+
+                EventCounter -= Time.deltaTime;
+                if (EventCounter <= 0.0f)
                 {
-                    if (Stats.faction == Factions.Neutral)
+                    currentAction = ActionQueue.Peek() as QueueItem;
+                    if (currentAction.Action == "LookAt")
                     {
-                        AIAgent.isStopped = true;
-                        Anim.Play("Base Layer.Grounded");
-                        ActionQueue.Clear();
-
-                        ActionQueue.Push(new QueueItem("Flee", Target));
+                        ActionQueue.Pop();
                     }
-                    break;
                 }
+                break;
+            }
+            case EventType.Death:
+            {
+                if (Stats.faction == Factions.Neutral)
+                {
+                    AIAgent.isStopped = true;
+                    Anim.Play("Base Layer.Grounded");
+                    ActionQueue.Clear();
+
+                    ActionQueue.Push(new QueueItem("Flee", Target));
+                }
+                break;
+            }
         }
     }
 
@@ -257,20 +265,20 @@ public class NeedsController : AiBehaviour
             switch (t.tag)
             {
                 case "Eat":
-                    Stats.ModifyStat("hunger", 50);
-                    break;
+                Stats.ModifyStat("hunger", 50);
+                break;
                 case "Sleep":
-                    // Reset fatigue and stamina
-                    // Clear the hapiness modifiers
-                    Stats.ModifyStat("fatigue", 100);
-                    Stats.ModifyStat("stamina", 100);
-                    break;
+                // Reset fatigue and stamina
+                // Clear the hapiness modifiers
+                Stats.ModifyStat("fatigue", 100);
+                Stats.ModifyStat("stamina", 100);
+                break;
                 case "Work":
-                    Stats.ModifyStat("boredom", 50);
-                    break;
+                Stats.ModifyStat("boredom", 50);
+                break;
                 case "Recreational":
-                    Stats.ModifyStat("social", 50);
-                    break;
+                Stats.ModifyStat("social", 50);
+                break;
             }
 
             Using = true;

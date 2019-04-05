@@ -180,9 +180,9 @@ public class AgentController : AiBehaviour
                 case Factions.Neutral:
                     {
                         // Interuption event and add fear
-                        NController._eventCount = 1.0f;
+                        NController.EventCounter = 1.0f;
                         NController.Target = args.Agent;
-                        NController._eventType = EventType.Hit;
+                        NController.EventType = EventType.Hit;
                         Stats.ModifyStat("fear", 1.0f);
                         break;
                     }
@@ -196,7 +196,7 @@ public class AgentController : AiBehaviour
                         }
                         else
                         {
-                            NController._eventCount = 1.0f;
+                            NController.EventCounter = 1.0f;
                             NController.Target = args.Agent;
                         }
                         break;
@@ -228,8 +228,8 @@ public class AgentController : AiBehaviour
                 case Factions.Neutral:
                     {
                         // Flee
-                        NController._eventCount = 1.0f;
-                        NController._eventType = EventType.Death;
+                        NController.EventCounter = 1.0f;
+                        NController.EventType = EventType.Death;
                         NController.Target = GameObject.FindGameObjectWithTag("Exit");
                         Stats.ModifyStat("fear", 10.0f);
                         break;
