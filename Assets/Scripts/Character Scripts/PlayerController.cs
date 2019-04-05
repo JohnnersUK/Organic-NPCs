@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Combat Settings:")]
     [SerializeField] private GameObject target;
-    [SerializeField] private bool inCombat = false;
+    [SerializeField] public bool inCombat { private get; set; }
     [SerializeField] private float attackCost = 1f;
 
     // Private
