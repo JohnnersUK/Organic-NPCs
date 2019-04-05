@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 
 public class CombatController : AiBehaviour
 {
-    public float AttackCost;
-    public float DodgeCost;
+    // Stamina costs
+    [SerializeField] private float AttackCost = 1;
+    [SerializeField] private float DodgeCost = 1;
 
     // Components
     private Animator Anim;
@@ -34,7 +36,7 @@ public class CombatController : AiBehaviour
         }
         LookAtTarget();
 
-        if(CombatTarget.GetComponent<CharacterStats>().GetStat("health") <= 0)
+        if (CombatTarget.GetComponent<CharacterStats>().GetStat("health") <= 0)
         {
             Stats.ModifyStat("anger", -Stats.GetStat("anger"));
             CombatTarget = null;
@@ -43,62 +45,63 @@ public class CombatController : AiBehaviour
         // Evaluate the NN
         Results.Sort();
 
-        switch (Results[Results.Count -1].ID)
+        switch (Results[Results.Count - 1].ID)
         {
             case 0:
+            {
+                if (!InRange())
                 {
-                    if (!InRange())
+                    GetComponentInChildren<Text>().text = "Moving to target";
+
+                    if (AIAgent.isOnNavMesh)
                     {
-                        GetComponentInChildren<Text>().text = "Moving to target";
-
-                        if (AIAgent.isOnNavMesh)
-                        {
-                            AIAgent.SetDestination(this.transform.position + this.transform.forward);
-                            AIAgent.isStopped = false;
-                        }
+                        AIAgent.SetDestination(transform.position + transform.forward);
+                        AIAgent.isStopped = false;
                     }
-                    else
-                    {
-                        AIAgent.isStopped = true;
-                        if (Stats.GetStat("stamina") > 0)
-                        {
-                            GetComponentInChildren<Text>().text = "Attacking";
-
-                            if (AIAgent.isOnNavMesh)
-                            {
-                                AIAgent.isStopped = true;
-                            }
-
-                            Attack();
-                        }
-                        else
-                        {
-                            GetComponentInChildren<Text>().text = "Waiting for stamina";
-                        }
-                    }
-                    break;
                 }
-            case 1:
+                else
                 {
                     AIAgent.isStopped = true;
                     if (Stats.GetStat("stamina") > 0)
                     {
-                        GetComponentInChildren<Text>().text = "Dodging";
-                        Anim.SetInteger("Dodge", Random.Range(-5, 5));
-                        
+                        GetComponentInChildren<Text>().text = "Attacking";
+
+                        if (AIAgent.isOnNavMesh)
+                        {
+                            AIAgent.isStopped = true;
+                        }
+
+                        Attack();
                     }
                     else
                     {
                         GetComponentInChildren<Text>().text = "Waiting for stamina";
                     }
-                    break;
                 }
-            case 2:
+                break;
+            }
+            case 1:
+            {
+                AIAgent.isStopped = true;
+                if (Stats.GetStat("stamina") > 0)
                 {
-                    AIAgent.isStopped = true;
-                    GetComponentInChildren<Text>().text = "Waiting";
-                    break;
+                    GetComponentInChildren<Text>().text = "Dodging";
+
+                    Stats.ModifyStat("stamina", -DodgeCost);
+                    Anim.SetInteger("Dodge", Random.Range(-5, 5));
                 }
+                else
+                {
+                    GetComponentInChildren<Text>().text = "Waiting for stamina";
+                }
+                break;
+            }
+            case 2:
+            {
+                AIAgent.isStopped = true;
+                GetComponentInChildren<Text>().text = "Waiting for stamina";
+                break;
+            }
         }
     }
 
@@ -106,8 +109,8 @@ public class CombatController : AiBehaviour
     {
         if (!Anim.GetBool("Attacking"))
         {
+            Stats.ModifyStat("stamina", -AttackCost);
             Anim.SetInteger("AttackType", Random.Range(0, 8));
-            
         }
     }
 
@@ -115,9 +118,11 @@ public class CombatController : AiBehaviour
     bool InRange()
     {
         if (CombatTarget == null)
+        {
             return false;
+        }
 
-        if (Vector3.Distance(CombatTarget.transform.position, this.transform.position) > Stats.table["range"])
+        if (Vector3.Distance(CombatTarget.transform.position, transform.position) > Stats.table["range"])
         {
             return false;
         }
@@ -130,9 +135,15 @@ public class CombatController : AiBehaviour
     // Look at the combat target
     void LookAtTarget()
     {
-        Vector3 lookPos = CombatTarget.transform.position - transform.position;
+        Vector3 lookPos;
+        Quaternion rotation;
+
+        // Get the look position
+        lookPos = CombatTarget.transform.position - transform.position;
         lookPos.y = 0;
-        Quaternion rotation = Quaternion.LookRotation(lookPos);
+
+        // Rotate towards the look position
+        rotation = Quaternion.LookRotation(lookPos);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
     }
 
@@ -147,6 +158,7 @@ public class CombatController : AiBehaviour
         float targetDistance = 1000;
         float newDistance = 0;
         List<GameObject> objects = new List<GameObject>();
+
         objects.AddRange(GameObject.FindGameObjectsWithTag("character"));
         objects.AddRange(GameObject.FindGameObjectsWithTag("Player"));
 
@@ -154,9 +166,9 @@ public class CombatController : AiBehaviour
         {
             foreach (GameObject element in objects)
             {
-                if (element.name != this.name) // And the enemy isn't itself ヽ( ͡ಠ ʖ̯ ͡ಠ)ﾉ
+                if (element.name != name) // And the enemy isn't itself ヽ( ͡ಠ ʖ̯ ͡ಠ)ﾉ
                 {
-                    newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
+                    newDistance = Vector3.Distance(element.transform.position, transform.position); // Compare distance
                     if (newDistance < targetDistance)
                     {
                         targetDistance = newDistance;

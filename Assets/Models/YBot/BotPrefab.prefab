@@ -2603,8 +2603,8 @@ MonoBehaviour:
   - damage
   HiddenLayers: 030000000300000003000000
   Outputs: 3
-  AttackCost: 0
-  DodgeCost: 0
+  AttackCost: 1
+  DodgeCost: 1
 --- !u!114 &114268925318110584
 MonoBehaviour:
   m_ObjectHideFlags: 1
