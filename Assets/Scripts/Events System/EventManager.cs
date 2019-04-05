@@ -9,14 +9,16 @@ using UnityEngine.SceneManagement;
 public class EventManager : MonoBehaviour
 {
     public static EventManager instance = null;
-    public NetworkTrainingScript nts;
-    public ResetPlayer rp;
+    [SerializeField] private NetworkTrainingScript nts;
+    [SerializeField] private ResetPlayer rp;
 
     private bool playerLoaded = false;
 
+    // Hit event
     public delegate void HitEventHandler(object source, PublicEventArgs args);
     public event HitEventHandler HitEvent;
 
+    // Death event
     public delegate void DeathEventHandler(object source, PublicEventArgs args);
     public event DeathEventHandler DeathEvent;
 
@@ -41,6 +43,9 @@ public class EventManager : MonoBehaviour
     // Find components and subscribe to all delegates
     public void Start()
     {
+        List<AttackCollider> ac;
+        List<PlayerAttackCollider> pac;
+
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         // Find the bots and add them to the public event listener
@@ -50,7 +55,7 @@ public class EventManager : MonoBehaviour
             b.GetComponent<AgentController>().DeathEvent += OnPublicEvent;
 
             // Get the attack event
-            List<AttackCollider> ac = new List<AttackCollider>();
+            ac = new List<AttackCollider>();
             ac.AddRange(b.GetComponentsInChildren<AttackCollider>());
 
             foreach (AttackCollider a in ac)
@@ -64,7 +69,7 @@ public class EventManager : MonoBehaviour
         {
             rp.player.GetComponent<PlayerController>().DeathEvent += OnPublicEvent;
 
-            List<PlayerAttackCollider> pac = new List<PlayerAttackCollider>();
+            pac = new List<PlayerAttackCollider>();
             pac.AddRange(rp.player.GetComponentsInChildren<PlayerAttackCollider>());
             foreach (PlayerAttackCollider p in pac)
             {
@@ -76,12 +81,14 @@ public class EventManager : MonoBehaviour
 
     private void Update()
     {
+        List<PlayerAttackCollider> pac;
+
         // Find the player and add it to the public event listener
         if (rp.player != null && !playerLoaded)
         {
             rp.player.GetComponent<PlayerController>().DeathEvent += OnPublicEvent;
 
-            List<PlayerAttackCollider> pac = new List<PlayerAttackCollider>();
+            pac = new List<PlayerAttackCollider>();
             pac.AddRange(rp.player.GetComponentsInChildren<PlayerAttackCollider>());
             foreach (PlayerAttackCollider p in pac)
             {
@@ -106,17 +113,17 @@ public class EventManager : MonoBehaviour
         {
             default:
             case EventType.Hit:
-                {
-                    Debug.Log("Broadcasting a hit event");
-                    OnHitEvent(args);
-                    break;
-                }
+            {
+                Debug.Log("Broadcasting a hit event");
+                OnHitEvent(args);
+                break;
+            }
             case EventType.Death:
-                {
-                    Debug.Log("Broadcasting a death event");
-                    OnDeathEvent(args);
-                    break;
-                }
+            {
+                Debug.Log("Broadcasting a death event");
+                OnDeathEvent(args);
+                break;
+            }
         }
     }
 
