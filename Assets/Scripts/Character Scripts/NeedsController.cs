@@ -10,16 +10,13 @@ public class NeedsController : AiBehaviour
     // Components
     private Animator Anim;
     private NavMeshAgent AIAgent;
+    public GameObject Target { private get; set; }
 
-    public GameObject target;
-    private Interactable[] objects;
+    private Interactable[] Objects;
 
-    private int output = 0;
+    private string ActionTag;
 
-    private float count = 0;
-    private string actionTag;
-
-    public bool Using = false;
+    private bool Using = false;
 
     public bool _event = false;
     public float _eventCount = 0.0f;
@@ -38,14 +35,14 @@ public class NeedsController : AiBehaviour
         AIAgent = GetComponent<NavMeshAgent>();
 
         GameObject interactables = GameObject.FindGameObjectWithTag("interactables");
-        objects = interactables.GetComponentsInChildren<Interactable>();
+        Objects = interactables.GetComponentsInChildren<Interactable>();
     }
 
     public override void Update()
     {
         // Run the NN
         float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        _outputs = Network.Run(inputs);             // Pass them through the NN
+        Results = Network.Run(inputs);             // Pass them through the NN
     }
 
     public override void Run()
@@ -66,12 +63,14 @@ public class NeedsController : AiBehaviour
         {
             GetComponentInChildren<Text>().text = "Processing Action";
 
-            if(ActionQueue.Count > 0)
+            if (ActionQueue.Count > 0)
             {
                 QueueItem currentAction = ActionQueue.Peek() as QueueItem;
 
                 if (currentAction == null)
+                {
                     return;
+                }
 
                 switch (currentAction.Action)
                 {
@@ -103,15 +102,6 @@ public class NeedsController : AiBehaviour
 
         // Evaluate the NN
         Update();
-        Results = new List<Output>();
-        for (int i = 0; i < _outputs.Length; i++)
-        {
-            Output temp = new Output();
-            temp.ID = i;
-            temp.Value = _outputs[i];
-            Results.Add(temp);
-        }
-
         Results.Sort();
 
         priority = Results.Count - 1; // Set the priority level
@@ -124,46 +114,47 @@ public class NeedsController : AiBehaviour
             {
                 // Eat
                 case 0:
-                    actionTag = "Eat";
+                    ActionTag = "Eat";
                     break;
                 // Sleep
                 case 1:
-                    actionTag = "Sleep";
+                    ActionTag = "Sleep";
                     break;
                 // Work
                 case 2:
-                    actionTag = "Work";
+                    ActionTag = "Work";
                     break;
                 // Recreational
                 case 3:
-                    actionTag = "Recreational";
+                    ActionTag = "Recreational";
                     break;
             }
 
             // Find closest object of that activity type
-            target = null;
-            foreach (Interactable element in objects)
+            Target = null;
+            foreach (Interactable element in Objects)
             {
                 // If the object is of the activity type, shares the same faction and isn't occupied
-                if (element.Type == actionTag && (element._Factions.Count == 0 || element._Factions.Contains(Stats.faction)) && !element.Occupied)
+                if (element.Type == ActionTag && (element._Factions.Count == 0 || element._Factions.Contains(Stats.faction)) && !element.Occupied)
                 {
-                    newDistance = Vector3.Distance(element.transform.position, this.transform.position); // Compare distance
+                    newDistance = Vector3.Distance(element.transform.position, transform.position); // Compare distance
                     if (newDistance < targetDistance)
                     {
                         targetDistance = newDistance;
-                        target = element.gameObject;
+                        Target = element.gameObject;
                     }
                 }
             }
 
             // If one exists, go use it
-            if (target)
+            if (Target)
             {
                 // Add actions to the queue
-                ActionQueue.Push(new QueueItem("Use", target));
-                ActionQueue.Push(new QueueItem("MoveTo", target));
+                ActionQueue.Push(new QueueItem("Use", Target));
+                ActionQueue.Push(new QueueItem("LookAt", Target));
+                ActionQueue.Push(new QueueItem("MoveTo", Target));
 
-                target.GetComponent<Interactable>().Occupied = true;
+                Target.GetComponent<Interactable>().Occupied = true;
                 hasAction = true;
             }
             else // Decrease the priority level and try again
@@ -177,10 +168,10 @@ public class NeedsController : AiBehaviour
         } while (!hasAction);
     }
 
-    void ResolveEvent()
+    private void ResolveEvent()
     {
         QueueItem currentAction;
-       
+
         switch (_eventType)
         {
             default:
@@ -190,7 +181,7 @@ public class NeedsController : AiBehaviour
                     if (ActionQueue.Count == 0) // If theres nothing in the action queue
                     {
                         Anim.Play("Base Layer.Grounded");
-                        ActionQueue.Push(new QueueItem("LookAt", target));
+                        ActionQueue.Push(new QueueItem("LookAt", Target));
                     }
                     else // If there is something in the queue
                     {
@@ -198,7 +189,7 @@ public class NeedsController : AiBehaviour
                         if (currentAction.Action != "LookAt" || currentAction.Action != "Flee")
                         {
                             Anim.Play("Base Layer.Grounded");
-                            ActionQueue.Push(new QueueItem("LookAt", target));
+                            ActionQueue.Push(new QueueItem("LookAt", Target));
                         }
                     }
 
@@ -214,14 +205,14 @@ public class NeedsController : AiBehaviour
                     break;
                 }
             case EventType.Death:
-                {               
-                    if(Stats.faction == Factions.Neutral)
+                {
+                    if (Stats.faction == Factions.Neutral)
                     {
                         AIAgent.isStopped = true;
                         Anim.Play("Base Layer.Grounded");
                         ActionQueue.Clear();
 
-                        ActionQueue.Push(new QueueItem("Flee", target));
+                        ActionQueue.Push(new QueueItem("Flee", Target));
                     }
                     break;
                 }
@@ -234,7 +225,7 @@ public class NeedsController : AiBehaviour
         Anim.Play("Base Layer.Grounded");
         GetComponentInChildren<Text>().text = "Moving to object";
 
-        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
+        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
         {
             if (AIAgent.isOnNavMesh)
             {
@@ -252,12 +243,6 @@ public class NeedsController : AiBehaviour
     private void Use(GameObject t)
     {
         GetComponentInChildren<Text>().text = t.tag + "ing";
-
-        // Make the bot look at the object its using
-        Vector3 lookPos = t.transform.position - transform.position;
-        lookPos.y = 0;
-        Quaternion targetRotation = Quaternion.LookRotation(lookPos);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 2);
 
         if (Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
         {
@@ -295,26 +280,56 @@ public class NeedsController : AiBehaviour
     }
 
     // Look at the target
-    void LookAtTarget()
+    private void LookAtTarget()
     {
+        Vector3 lookPos;
+        Quaternion rotation;
+
+        float cy;
+        float ty;
+        float diff;
+
         GetComponentInChildren<Text>().text = "Looking at target";
-        Vector3 lookPos = target.transform.position - transform.position;
+        lookPos = Target.transform.position - transform.position;
         lookPos.y = 0;
-        Quaternion rotation = Quaternion.LookRotation(lookPos);
+
+        rotation = Quaternion.LookRotation(lookPos);
+
+        // Calculate turn direction and set animation
+        cy = transform.rotation.eulerAngles.y;
+        ty = rotation.eulerAngles.y;
+        diff = ty - cy;
+
+        if (diff < 0)
+        {
+            diff += 360;
+        }
+
+        if (diff > 180)
+        {
+            Anim.SetFloat("Turn", -0.5f);
+        }
+        else
+        {
+            Anim.SetFloat("Turn", 0.5f);
+        }
+
+        // Turn the character
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 2);
 
-        if (transform.rotation == rotation)
+        // If the current rotation is within 1 degree
+        if (Quaternion.Angle(transform.rotation, rotation) <= 1)
         {
             ActionQueue.Pop();
         }
     }
 
-    void Flee(GameObject t)
+    private void Flee(GameObject t)
     {
         Anim.Play("Base Layer.Grounded");
         GetComponentInChildren<Text>().text = "Moving to object";
 
-        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, this.transform.position) > 0.5)
+        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
         {
             if (AIAgent.isOnNavMesh)
             {

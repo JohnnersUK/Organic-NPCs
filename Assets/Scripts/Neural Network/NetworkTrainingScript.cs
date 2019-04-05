@@ -89,8 +89,8 @@ public class NetworkTrainingScript : MonoBehaviour
                     bots[i].GetComponent<CombatController>().Start();
                     break;
                 case Networks.MasterNetwork:
-                    _Behaviours.Add(bots[i].GetComponent<CharacterController>());
-                    bots[i].GetComponent<CharacterController>().Start();
+                    _Behaviours.Add(bots[i].GetComponent<AgentController>());
+                    bots[i].GetComponent<AgentController>().Start();
                     break;
                 case Networks.NeedsNetwork:
                     _Behaviours.Add(bots[i].GetComponent<NeedsController>());
@@ -264,14 +264,7 @@ public class NetworkTrainingScript : MonoBehaviour
             ab.Update();
 
             // Evaluate the outputs
-            List<Output> Results = new List<Output>();
-            for (int i = 0; i < ab._outputs.Length; i++)
-            {
-                Output temp = new Output();
-                temp.ID = i;
-                temp.Value = ab._outputs[i];
-                Results.Add(temp);
-            }
+            List<Output> Results = ab.Results;
 
             Results.Sort();
 

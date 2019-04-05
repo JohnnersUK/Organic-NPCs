@@ -17,11 +17,9 @@ public class AiBehaviour : MonoBehaviour
     protected string filePath;
     // Components
     protected CharacterStats Stats;
-    public float[] _outputs;
 
     public virtual void Start()
     {
-        th
         Stats = GetComponent<CharacterStats>();
         // Initilize the neural network
         int length = HiddenLayers.Length + 2;
@@ -59,7 +57,7 @@ public class AiBehaviour : MonoBehaviour
     {
         // Run the NN
         float[] inputs = Stats.GetStats(Inputs);        // Update the inputs
-        _outputs = Network.Run(inputs);             // Pass them through the NN
+        Results = Network.Run(inputs);             // Pass them through the NN
     }
 
 

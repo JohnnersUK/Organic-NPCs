@@ -47,7 +47,7 @@ public class EventManager : MonoBehaviour
         foreach (GameObject b in nts.bots)
         {
             // Get the death event
-            b.GetComponent<CharacterController>().DeathEvent += OnPublicEvent;
+            b.GetComponent<AgentController>().DeathEvent += OnPublicEvent;
 
             // Get the attack event
             List<AttackCollider> ac = new List<AttackCollider>();

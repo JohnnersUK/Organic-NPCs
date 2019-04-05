@@ -68,8 +68,10 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
 
 
     // Run data through the NN
-    public float[] Run(float[] inputs)
+    public List<Output> Run(float[] inputs)
     {
+        float[] rawOutputs;
+        List<Output> outputs;
         // pass inputs into the network
         for (int i = 0; i < inputs.Length; i++)
         {
@@ -93,9 +95,21 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 _neurons[i][j] = (float)Math.Tanh(value); 
             }
         }
+        rawOutputs = _neurons[_neurons.Length - 1];
+
+        outputs = new List<Output>();
+        for (int i = 0; i < rawOutputs.Length; i++)
+        {
+            Output temp = new Output
+            {
+                ID = i,
+                Value = rawOutputs[i]
+            };
+            outputs.Add(temp);
+        }
 
         // Return the outputs
-        return _neurons[_neurons.Length - 1];
+        return outputs;
     }
 
 

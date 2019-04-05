@@ -6,7 +6,7 @@ using UnityEngine.AI;
 using UnityEngine.UI;
 using UnityStandardAssets.Characters.ThirdPerson;
 
-public class CharacterController : AiBehaviour
+public class AgentController : AiBehaviour
 {
     public bool InCombat = false;
     public Material dead;
@@ -89,18 +89,10 @@ public class CharacterController : AiBehaviour
             //Check the state
             //Run the NN
             float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
-            float[] _outputs = Network.Run(inputs);       // Pass them through the NN
 
-            // Evaluate the NN
-            Results = new List<Output>();                 // Create the list of results
-            for (int i = 0; i < Outputs; i++)
-            {
-                Output t = new Output();
-                t.ID = i;
-                t.Value = _outputs[i];
-                Results.Add(t);
-            }
-            Results.Sort();                                     // Sort the list of results
+            Results = Network.Run(inputs);       // Pass them through the NN
+            Results.Sort();                      // Sort the list of results
+
             currentState = (State)Results[Results.Count - 1].ID;  // Set the result
         }
         else
@@ -189,7 +181,7 @@ public class CharacterController : AiBehaviour
                 case Factions.Neutral:
                     {
                         NController._eventCount = 1.0f;
-                        NController.target = args.Agent;
+                        NController.Target = args.Agent;
                         NController._eventType = EventType.Hit;
                         Stats.fear += 1.0f;
                         break;
@@ -204,7 +196,7 @@ public class CharacterController : AiBehaviour
                         else
                         {
                             NController._eventCount = 1.0f;
-                            NController.target = args.Agent;
+                            NController.Target = args.Agent;
                         }
                         break;
                     }
@@ -235,7 +227,7 @@ public class CharacterController : AiBehaviour
                         // Flee
                         NController._eventCount = 1.0f;
                         NController._eventType = EventType.Death;
-                        NController.target = GameObject.FindGameObjectWithTag("Exit");
+                        NController.Target = GameObject.FindGameObjectWithTag("Exit");
                         Stats.fear += 10.0f;
                         break;
                     }

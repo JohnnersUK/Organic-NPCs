@@ -45,18 +45,9 @@ public class CombatController : AiBehaviour
         }
 
         // Evaluate the NN
-        float outputTotal = -2;
+        Results.Sort();
 
-        for (int i = 0; i < _outputs.Length; i++)
-        {
-            if (_outputs[i] > outputTotal)
-            {
-                output = i;
-                outputTotal = _outputs[i];
-            }
-        }
-
-        switch (output)
+        switch (Results[Results.Count -1].ID)
         {
             case 0:
                 {
