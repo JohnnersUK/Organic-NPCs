@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -8,12 +7,10 @@ using UnityStandardAssets.Characters.ThirdPerson;
 
 public class AgentController : AiBehaviour
 {
-    public bool InCombat = false;
-    public Material dead;
+    [SerializeField] private Material DeadMat = null;
 
     // Interactions
-    private float interactionCount = 0.0f;
-    private Transform interactPoint;
+    private Transform InteractPoint;
 
     // Components
     private Animator Anim;
@@ -26,15 +23,13 @@ public class AgentController : AiBehaviour
     private NavMeshAgent AIAgent;
     private ThirdPersonCharacter TPController;
 
-    private EventManager em;
-
-    enum State
+    private enum State
     {
         Idle = 0,
         Combat = 1,
         Dead = 2
     }
-    State currentState = State.Idle;
+    private State currentState = State.Idle;
 
     // Death event
     public delegate void DeathEventHandler(object source, PublicEventArgs args);
@@ -64,6 +59,10 @@ public class AgentController : AiBehaviour
 
     public override void Update()
     {
+        float[] inputs;
+
+        SkinnedMeshRenderer[] skin;
+
         if (currentState == State.Dead)
         {
             return;
@@ -88,7 +87,7 @@ public class AgentController : AiBehaviour
         {
             //Check the state
             //Run the NN
-            float[] inputs = Stats.GetStats(Inputs);            // Update the inputs
+            inputs = Stats.GetStats(Inputs);            // Update the inputs
 
             Results = Network.Run(inputs);       // Pass them through the NN
             Results.Sort();                      // Sort the list of results
@@ -134,11 +133,11 @@ public class AgentController : AiBehaviour
                         SendDeathEvent();
                     }
 
-                    SkinnedMeshRenderer[] skin = GetComponentsInChildren<SkinnedMeshRenderer>();
+                    skin = GetComponentsInChildren<SkinnedMeshRenderer>();
 
                     foreach (SkinnedMeshRenderer smr in skin)
                     {
-                        smr.material = dead;
+                        smr.material = DeadMat;
                     }
 
                     AIAgent.isStopped = true;
@@ -157,14 +156,16 @@ public class AgentController : AiBehaviour
     // A nearby robot has been hit
     public void OnHitEvent(object source, PublicEventArgs args)
     {
-        Debug.Log("Here");
+        CharacterStats agentStats;
+        CharacterStats subjectStats;
+
         if (args.Agent == null || args.Subject == null)
         {
             return;
         }
 
-        CharacterStats agentStats = args.Agent.GetComponent<CharacterStats>();
-        CharacterStats subjectStats = args.Subject.GetComponent<CharacterStats>();
+        agentStats = args.Agent.GetComponent<CharacterStats>();
+        subjectStats = args.Subject.GetComponent<CharacterStats>();
 
         if (agentStats == null || subjectStats == null)
         {
@@ -180,6 +181,7 @@ public class AgentController : AiBehaviour
                 default:
                 case Factions.Neutral:
                     {
+                        // Interuption event and add fear
                         NController._eventCount = 1.0f;
                         NController.Target = args.Agent;
                         NController._eventType = EventType.Hit;
@@ -188,6 +190,7 @@ public class AgentController : AiBehaviour
                     }
                 case Factions.Barbarians:
                     {
+                        // Join in fight
                         if (subjectStats.faction == Stats.faction)
                         {
                             Stats.anger += 10.0f;
@@ -202,6 +205,7 @@ public class AgentController : AiBehaviour
                     }
                 case Factions.Guards:
                     {
+                        // Attack offender
                         if (agentStats.faction != Factions.Guards)
                         {
                             Stats.anger += 10.0f;
@@ -213,6 +217,7 @@ public class AgentController : AiBehaviour
         }
     }
 
+    // A nearby robot died
     public void OnDeathEvent(object source, PublicEventArgs args)
     {
         // If the bot is in range of the event && they didn't trigger it
@@ -247,9 +252,11 @@ public class AgentController : AiBehaviour
 
     protected virtual void SendDeathEvent()
     {
+        PublicEventArgs args;
+
         if (DeathEvent != null)
         {
-            PublicEventArgs args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
+            args = new PublicEventArgs(gameObject, null, EventType.Death, 100);
             DeathEvent(this, args);
         }
     }
