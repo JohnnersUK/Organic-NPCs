@@ -147,7 +147,6 @@ GameObject:
   - component: {fileID: 54128151951040192}
   - component: {fileID: 136107660469998374}
   - component: {fileID: 195441765850465542}
-  - component: {fileID: 208089231511987390}
   - component: {fileID: 114415583407265424}
   - component: {fileID: 114311686872391452}
   - component: {fileID: 114065078771310900}
@@ -2635,9 +2634,9 @@ MonoBehaviour:
   health: 100
   maxHealth: 100
   stamina: 100
-  maxStamina: 50
-  staminaGain: 50
-  maxRechargeDelay: 5
+  maxStamina: 10
+  staminaGain: 10
+  maxRechargeDelay: 1
   rechargeDelay: 0
   damage: 10
   range: 2
@@ -2650,11 +2649,11 @@ MonoBehaviour:
   fear: 0
   hModifiers: []
   faction: 0
-  randomize: 0
-  reset: 0
+  iframes: 0.2
+  icount: 0
+  invincible: 0
   debug: 0
   rTime: 0
-  rCount: 0
   happy: {fileID: 198274757741264540}
   sad: {fileID: 198597140005479474}
 --- !u!114 &114415583407265424
@@ -12347,21 +12346,6 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
---- !u!208 &208089231511987390
-NavMeshObstacle:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1110112973772090}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Shape: 0
-  m_Extents: {x: 0.5, y: 1, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 0
-  m_CarveOnlyStationary: 0
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!222 &222698824849952610
 CanvasRenderer:
   m_ObjectHideFlags: 1

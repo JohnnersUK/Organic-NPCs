@@ -10,8 +10,6 @@ public class Interactable : MonoBehaviour
 
     public Transform InteractPoint;
 
-    private float count = 5.0f;
-
     private void Start()
     {
         Type = gameObject.tag;

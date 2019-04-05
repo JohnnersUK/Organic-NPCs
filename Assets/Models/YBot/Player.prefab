@@ -2263,8 +2263,8 @@ MonoBehaviour:
   maxHealth: 100
   stamina: 10
   maxStamina: 10
-  staminaGain: 2
-  maxRechargeDelay: 5
+  staminaGain: 10
+  maxRechargeDelay: 1
   rechargeDelay: 0
   damage: 10
   range: 1.5
@@ -2274,16 +2274,14 @@ MonoBehaviour:
   social: 100
   happiness: 0
   anger: 0
+  fear: 0
   hModifiers: []
   faction: 0
-  randomize: 0
-  reset: 0
-  debug: 0
-  iframes: 30
+  iframes: 0.2
   icount: 0
   invincible: 0
+  debug: 0
   rTime: 0
-  rCount: 0
   happy: {fileID: 198974956975217566}
   sad: {fileID: 198697356767943274}
 --- !u!114 &114910967451271006

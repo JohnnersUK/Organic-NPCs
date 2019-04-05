@@ -257,20 +257,19 @@ public class NeedsController : AiBehaviour
             switch (t.tag)
             {
                 case "Eat":
-                    Stats.hunger += 50;
+                    Stats.ModifyStat("hunger", 50);
                     break;
                 case "Sleep":
                     // Reset fatigue and stamina
                     // Clear the hapiness modifiers
-                    Stats.fatigue = 100;
-                    Stats.stamina = 100;
-                    Stats.hModifiers.Clear();
+                    Stats.ModifyStat("fatigue", 100);
+                    Stats.ModifyStat("stamina", 100);
                     break;
                 case "Work":
-                    Stats.boredom += 50;
+                    Stats.ModifyStat("boredom", 50);
                     break;
                 case "Recreational":
-                    Stats.social += 50;
+                    Stats.ModifyStat("social", 50);
                     break;
             }
 

@@ -1,56 +1,59 @@
-﻿using System.Collections.Generic;
+﻿// Dissable assigned but not used warning
+// Stats are there for debug viewing in the inspector
+// as unity dosen't show dictionaries in the inspector
+#pragma warning disable 0414
+
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CharacterStats : MonoBehaviour
 {
-    // Stats
+    // Stats for inspector
     /// Combat
     [Header("Health Settings:")]
-    public float health;
-    public float maxHealth;
+    [SerializeField] private float health;
+    public float maxHealth = 100;
 
     [Header("Stamina Settings:")]
-    public float stamina;
-    public float maxStamina;
-    public float staminaGain;
-    public float maxRechargeDelay;
-    public float rechargeDelay = 0;
+    [SerializeField] private float stamina;
+    public float maxStamina = 10;
+    public float staminaGain = 10;
+    public float maxRechargeDelay = 1;
+    [SerializeField] private float rechargeDelay = 0;
 
-    public float damage = 10.0f;
-    public float range = 1.5f;
+    [SerializeField] private float damage = 10.0f;
+    [SerializeField] private float range = 1.5f;
 
     // Needs
     [Header("Needs:")]
-    public float fatigue = 100.0f;
-    public float hunger = 100.0f;
-    public float boredom = 100.0f;
-    public float social = 100.0f;
+    [SerializeField] private float fatigue = 100.0f;
+    [SerializeField] private float hunger = 100.0f;
+    [SerializeField] private float boredom = 100.0f;
+    [SerializeField] private float social = 100.0f;
 
     // Emotions
     [Header("Emotions:")]
-    public float happiness = 0.0f;
-    public float anger = 0.0f;
-    public float fear = 0.0f;
-    public List<float> hModifiers;
+    [SerializeField] private float happiness = 0.0f;
+    [SerializeField] private float anger = 0.0f;
+    [SerializeField] private float fear = 0.0f;
+    [SerializeField] private List<float> hModifiers;
 
     // Faction
     [Header("Faction:")]
     public Factions faction;
 
+    // Invincibility settings
+    [Header("invincibility:")]
+    [SerializeField] private float iframes = 0.2f;
+    [SerializeField] private float icount;
+    [SerializeField] private bool invincible = false;
+
     // Debug
     [Header("Debug:")]
-    public bool randomize = false;
-    public bool reset = false;
 
     [Space(10, order = 0)]
-    public float debug = 0.0f;
-
-    private float iframes = 0.2f;
-    private float icount;
-    private bool invincible = false;
-
-    public float rTime;
-    public float rCount = 0;
+    [SerializeField] private float debug = 0.0f;
+    [SerializeField] private float rTime;
 
     // A dictionary of the character stats, for easy lookup and access
     public IDictionary<string, float> table = new Dictionary<string, float>()
@@ -91,8 +94,8 @@ public class CharacterStats : MonoBehaviour
         {Factions.Neutral, 50.0f}
     };
 
-    public ParticleSystem happy;
-    public ParticleSystem sad;
+    [SerializeField] private ParticleSystem happy = null;
+    [SerializeField] private ParticleSystem sad = null;
 
     // Use this for initialization
     void Start()
@@ -127,7 +130,7 @@ public class CharacterStats : MonoBehaviour
     {
         if (!invincible)
         {
-            health -= dmg;
+            table["health"] -= dmg;
             invincible = true;
             icount = iframes;
         }
@@ -139,22 +142,17 @@ public class CharacterStats : MonoBehaviour
         {
             if (faction == Factions.Guards && agent.GetComponent<CharacterStats>().faction == Factions.Guards)
             {
-                anger += 10;
+                table["anger"] += 10;
             }
             else
             {
                 GetComponent<CombatController>().SetTarget(agent);
-                anger += 10;
-            }  
+                table["anger"] += 10;
+            }
         }
-
     }
 
-    /// <summary>
-    /// Returns a list of stats
-    /// </summary>
-    /// <param name="Strings">Array of names of the stats you want returned</param>
-    /// <returns></returns>
+    // Returns a list of stats
     public float[] GetStats(string[] Strings)
     {
         float[] stats = new float[Strings.Length];
@@ -167,25 +165,16 @@ public class CharacterStats : MonoBehaviour
         return stats;
     }
 
-    /// <summary>
-    /// Returns a single stat
-    /// </summary>
-    /// <param name="stat">The name of the stat you want to set</param>
-    /// <returns></returns>
+    // Returns a single stat
     public float GetStat(string stat)
     {
         return table[stat];
     }
 
-    /// <summary>
-    /// Sets a single stat
-    /// </summary>
-    /// <param name="stat">The name of the stat you want to set</param>
-    /// <param name="value">The value to set it as</param>
-    public void SetStat(string stat, float value)
+    // Sets a single stat
+    public void ModifyStat(string stat, float value)
     {
-        table[stat] = value;
-        return;
+        table[stat] += value;
     }
 
     // Updates the stats
@@ -193,20 +182,20 @@ public class CharacterStats : MonoBehaviour
     {
         // Stats
         // Decrease the stats over time and clap them between 0 and 100
-        hunger = Mathf.Clamp(hunger - 1 * Time.deltaTime, 0.0f, 100.0f);
-        if (hunger == 0)    // If hunger is equal to zero, lose health
+        table["hunger"] = Mathf.Clamp(table["hunger"] - 1 * Time.deltaTime, 0.0f, 100.0f);
+        if (table["hunger"] == 0)    // If hunger is equal to zero, lose health
         {
             //health -= 1 * Time.deltaTime;
             // Dissabled from gameplay testing feedback
         }
 
-        boredom = Mathf.Clamp(boredom - 0.5f * Time.deltaTime, 0.0f, 100.0f);
-        social = Mathf.Clamp(social - 1 * Time.deltaTime, 0.0f, 100.0f);
-        fatigue = Mathf.Clamp(fatigue - 0.1f * Time.deltaTime, 0.0f, 100.0f);
+        table["boredom"] = Mathf.Clamp(table["boredom"] - 0.5f * Time.deltaTime, 0.0f, 100.0f);
+        table["social"] = Mathf.Clamp(table["social"] - 1 * Time.deltaTime, 0.0f, 100.0f);
+        table["fatigue"] = Mathf.Clamp(table["fatigue"] - 0.1f * Time.deltaTime, 0.0f, 100.0f);
 
-        happiness = CalculateHappiness();
-        anger = ((anger <= 0) ? 0 : anger - Time.deltaTime * 0.1f);
-        fear = ((fear <= 0) ? 0 : anger - Time.deltaTime * 0.1f);
+        table["happiness"] = CalculateHappiness();
+        table["anger"] = ((table["anger"] <= 0) ? 0 : table["anger"] - Time.deltaTime * 0.1f);
+        table["fear"] = ((table["fear"] <= 0) ? 0 : table["fear"] - Time.deltaTime * 0.1f);
 
         // Stamina
         if (rechargeDelay > 0)
@@ -216,9 +205,8 @@ public class CharacterStats : MonoBehaviour
             {
                 rechargeDelay = 0;
 
-                if (stamina <= 0)
+                if (table["stamina"] <= 0)
                 {
-                    stamina = 1;
                     table["stamina"] = 1;
                 }
 
@@ -231,12 +219,12 @@ public class CharacterStats : MonoBehaviour
             // Recharge stamina
             if (rechargeDelay == 0)
             {
-                stamina = ((stamina < maxStamina) ? stamina + staminaGain * Time.deltaTime : maxStamina);
+                table["stamina"] = ((table["stamina"] < maxStamina) ? table["stamina"] + staminaGain * Time.deltaTime : maxStamina);
             }
         }
         else // If stamina has been modified
         {
-            if (stamina > 0)
+            if (table["stamina"] > 0)
             {
                 rechargeDelay = maxRechargeDelay / 4;
             }
@@ -246,20 +234,21 @@ public class CharacterStats : MonoBehaviour
             }
         }
 
-        table["health"] = health;
-        table["stamina"] = stamina;
-        table["damage"] = damage;
-        table["range"] = range;
+        health = table["health"];
+        stamina = table["stamina"];
+        damage = table["damage"];
+        range = table["range"];
         table["random"] = Random.Range(-100f, 100f);
-        table["debug"] = debug;
+        debug = table["debug"];
 
-        table["fatigue"] = fatigue;
-        table["hunger"] = hunger;
-        table["social"] = social;
-        table["boredom"] = boredom;
+        fatigue = table["fatigue"];
+        hunger = table["hunger"];
+        social = table["social"];
+        boredom = table["boredom"];
 
-        table["happiness"] = happiness;
-        table["anger"] = anger;
+        happiness = table["happiness"];
+        anger = table["anger"];
+        fear = table["fear"];
     }
 
     // Calculates the bots happiness
@@ -270,13 +259,13 @@ public class CharacterStats : MonoBehaviour
         float total;
 
         // Get the stats as a percentage between -1 and 1
-        float s = (social / 50) - 1;
-        float b = (boredom / 50) - 1;
-        float f = (fatigue / 50) - 1;
+        float s = (table["social"] / 50) - 1;
+        float b = (table["boredom"] / 50) - 1;
+        float f = (table["fatigue"] / 50) - 1;
 
         // Calculate the hunger multiplier as a Sine wave
         // Where a = 2, h = 0.5, b = 1 and k = -1
-        hAsPi = Mathf.PI * (hunger / 100);
+        hAsPi = Mathf.PI * (table["hunger"] / 100);
         hSine = 2 * Mathf.Sin(hAsPi - 0.5f) - 1;
 
         total = s + b + f + hSine;
@@ -292,19 +281,19 @@ public class CharacterStats : MonoBehaviour
     // Randomizes the stats
     public void Randomize()
     {
-        health = Random.Range(0.0f, 100f);
-        stamina = Random.Range(0.0f, 100f);
-        damage = Random.Range(0.0f, 100f);
+        table["health"] = Random.Range(0.0f, 100f);
+        table["stamina"] = Random.Range(0.0f, 100f);
+        table["damage"] = Random.Range(0.0f, 100f);
 
-        debug = Random.Range(0.0f, 100f);
+        table["debug"] = Random.Range(0.0f, 100f);
 
-        fatigue = Random.Range(0.0f, 100f);
-        hunger = Random.Range(0.0f, 100f);
-        boredom = Random.Range(0.0f, 100f);
-        social = Random.Range(0.0f, 100f);
+        table["fatigue"] = Random.Range(0.0f, 100f);
+        table["hunger"] = Random.Range(0.0f, 100f);
+        table["boredom"] = Random.Range(0.0f, 100f);
+        table["social"] = Random.Range(0.0f, 100f);
 
-        anger = Random.Range(-10.0f, 10.0f);
-        fear = Random.Range(0.0f, 0.0f);
+        table["anger"] = Random.Range(-10.0f, 10.0f);
+        table["fear"] = Random.Range(0.0f, 0.0f);
 
         UpdateStats();
     }

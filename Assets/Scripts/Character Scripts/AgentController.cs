@@ -14,7 +14,6 @@ public class AgentController : AiBehaviour
 
     // Components
     private Animator Anim;
-    private Camera MainCam;
 
     private CombatController CController;
     private NeedsController NController;
@@ -41,7 +40,6 @@ public class AgentController : AiBehaviour
         FilePath = Path.Combine(Application.streamingAssetsPath, "MasterNetwork.nn");
         base.Start();
 
-        MainCam = Camera.main;
         AIAgent = GetComponent<NavMeshAgent>();
         TPController = GetComponent<ThirdPersonCharacter>();
         Anim = GetComponent<Animator>();
@@ -83,7 +81,7 @@ public class AgentController : AiBehaviour
             }
         }
 
-        if (Stats.health > 0)
+        if (Stats.GetStat("health") > 0)
         {
             //Check the state
             //Run the NN
@@ -144,13 +142,13 @@ public class AgentController : AiBehaviour
                     GetComponentInChildren<Text>().text = "Dead";
 
                     // Bots can no longer gain fitness whilst dead
-                    NController.Network.AddFitness(-Stats.happiness);
+                    NController.Network.AddFitness(-Stats.GetStat("happiness"));
 
                     break;
                 }
         }
 
-        NController.Network.AddFitness(Stats.happiness * Time.deltaTime);
+        NController.Network.AddFitness(Stats.GetStat("happiness") * Time.deltaTime);
     }
 
     // A nearby robot has been hit
@@ -185,7 +183,7 @@ public class AgentController : AiBehaviour
                         NController._eventCount = 1.0f;
                         NController.Target = args.Agent;
                         NController._eventType = EventType.Hit;
-                        Stats.fear += 1.0f;
+                        Stats.ModifyStat("fear", 1.0f);
                         break;
                     }
                 case Factions.Barbarians:
@@ -193,7 +191,7 @@ public class AgentController : AiBehaviour
                         // Join in fight
                         if (subjectStats.faction == Stats.faction)
                         {
-                            Stats.anger += 10.0f;
+                            Stats.ModifyStat("anger", 10.0f);
                             CController.SetTarget(args.Agent);
                         }
                         else
@@ -208,7 +206,7 @@ public class AgentController : AiBehaviour
                         // Attack offender
                         if (agentStats.faction != Factions.Guards)
                         {
-                            Stats.anger += 10.0f;
+                            Stats.ModifyStat("anger", 10.0f);
                             CController.SetTarget(args.Agent);
                         }
                         break;
@@ -233,7 +231,7 @@ public class AgentController : AiBehaviour
                         NController._eventCount = 1.0f;
                         NController._eventType = EventType.Death;
                         NController.Target = GameObject.FindGameObjectWithTag("Exit");
-                        Stats.fear += 10.0f;
+                        Stats.ModifyStat("fear", 10.0f);
                         break;
                     }
                 case Factions.Barbarians:

@@ -2,10 +2,9 @@
 
 public class AttackCollider : MonoBehaviour
 {
-
-    [SerializeField] private int[] attackValues;
-    [SerializeField] private Animator anim;
-    [SerializeField] private CharacterStats stats;
+    [SerializeField] private int[] attackValues = null;
+    [SerializeField] private Animator anim = null;
+    [SerializeField] private CharacterStats stats = null;
     [SerializeField] private GameObject player;
     private SphereCollider col;
 

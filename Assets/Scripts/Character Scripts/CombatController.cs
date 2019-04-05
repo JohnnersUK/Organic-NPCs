@@ -14,9 +14,6 @@ public class CombatController : AiBehaviour
     private NavMeshAgent AIAgent;
     private GameObject CombatTarget;
 
-    private int output = 0;
-    private float count = 0;
-
     public override void Start()
     {
         // Set the filePath and init the network
@@ -37,9 +34,9 @@ public class CombatController : AiBehaviour
         }
         LookAtTarget();
 
-        if(CombatTarget.GetComponent<CharacterStats>().health <= 0)
+        if(CombatTarget.GetComponent<CharacterStats>().GetStat("health") <= 0)
         {
-            Stats.anger = 0;
+            Stats.ModifyStat("anger", -Stats.GetStat("anger"));
             CombatTarget = null;
         }
 

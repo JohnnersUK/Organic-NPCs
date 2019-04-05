@@ -32,8 +32,8 @@ public class BarController : MonoBehaviour
         }
         else
         {
-            Health.fillAmount = PlayerStats.health / PlayerStats.maxHealth;
-            Stamina.fillAmount = PlayerStats.stamina / PlayerStats.maxStamina;
+            Health.fillAmount = PlayerStats.GetStat("health") / PlayerStats.maxHealth;
+            Stamina.fillAmount = PlayerStats.GetStat("stamina") / PlayerStats.maxStamina;
         }
 
     }

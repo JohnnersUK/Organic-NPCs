@@ -48,7 +48,7 @@ public class PlayerAttackCollider : MonoBehaviour
         {
             Debug.Log("Hit " + other.name);
 
-            other.GetComponent<CharacterStats>().GetHit(GetComponent<Transform>().root.gameObject, stats.damage);
+            other.GetComponent<CharacterStats>().GetHit(GetComponent<Transform>().root.gameObject, stats.GetStat("damage"));
             other.GetComponent<Animator>().Play("Base Layer.Combat.Hit.Hit " + UnityEngine.Random.Range(0,4));
 
             col.enabled = false;

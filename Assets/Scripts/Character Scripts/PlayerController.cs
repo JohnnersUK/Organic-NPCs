@@ -38,27 +38,18 @@ public class PlayerController : MonoBehaviour
     public delegate void DeathEventHandler(object source, PublicEventArgs args);
     public event DeathEventHandler DeathEvent;
 
-    enum State
-    {
-        Default = -1,
-        Idle = 0,
-        Combat
-    }
-    private State currentState = 0;
-
     void Start()
     {
         anim = GetComponent<Animator>();
         camT = Camera.main.transform;
         cc = GetComponent<UnityEngine.CharacterController>();
         stats = GetComponent<CharacterStats>();
-
         target = null;
     }
 
     void Update()
     {
-        if (stats.health <= 0)
+        if (stats.GetStat("health") <= 0)
         {
             if(dead)
             {
@@ -86,7 +77,6 @@ public class PlayerController : MonoBehaviour
 
             inCombat = !inCombat;
         }
-        currentState = ((inCombat) ? (State)1 : (State)0);
         anim.SetBool("inCombat", inCombat);
 
         if(Input.GetKeyDown(KeyCode.E))
@@ -104,7 +94,7 @@ public class PlayerController : MonoBehaviour
                 Vector2 inputDir = rawInput.normalized;
 
                 bool running;
-                if (stats.stamina > 0)
+                if (stats.GetStat("stamina") > 0)
                     running = Input.GetKey(KeyCode.LeftShift);
                 else
                     running = false;
@@ -154,7 +144,7 @@ public class PlayerController : MonoBehaviour
 
         currentSpeed = new Vector2(cc.velocity.x, cc.velocity.z).magnitude;
         if (running && currentSpeed > 0)
-            stats.stamina -= Time.deltaTime;
+            stats.ModifyStat("stamina", -Time.deltaTime);
 
         if (cc.isGrounded)
         {
@@ -197,24 +187,24 @@ public class PlayerController : MonoBehaviour
     void Attack()
     {
         inCombat = true;
-        if (!anim.GetBool("Attacking") && stats.stamina > 0)
+        if (!anim.GetBool("Attacking") && stats.GetStat("stamina") > 0)
         {
             anim.SetBool("Attacking", true);
             anim.SetInteger("attackValue", Random.Range(0, 6));
-            stats.stamina -= attackCost;
+            stats.ModifyStat("stamina", -attackCost);
         }
     }
 
     
     void Jump()
     {
-        if (cc.isGrounded && stats.stamina > 0)
+        if (cc.isGrounded && stats.GetStat("stamina") > 0)
         {
             anim.SetBool("Grounded", false);
             float jumpVelocity = Mathf.Sqrt(-2 * gravity * jumpHeight);
             yVel = jumpVelocity;
 
-            stats.stamina -= jumpCost;
+            stats.ModifyStat("stamina", -jumpCost);
         }
     }
 

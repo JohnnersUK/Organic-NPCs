@@ -21,7 +21,7 @@ public class NetworkTrainingScript : MonoBehaviour
     public int itCount = 0;
 
     [Header("Simulation Settings:")]
-    [SerializeField] Networks trainingNetwork;
+    [SerializeField] Networks trainingNetwork = 0;
 
     public int simultaionNum;
 
@@ -289,7 +289,7 @@ public class NetworkTrainingScript : MonoBehaviour
             // Idle
             case 0:
                 {
-                    if (s.anger > 0)
+                    if (s.GetStat("anger") > 0)
                         ab.Network.AddFitness(-1);
                     else
                         ab.Network.AddFitness(1);
@@ -299,7 +299,7 @@ public class NetworkTrainingScript : MonoBehaviour
             // Combat
             case 1:
                 {
-                    if (s.anger > 0)
+                    if (s.GetStat("anger") > 0)
                         ab.Network.AddFitness(1);
                     else
                         ab.Network.AddFitness(-1);
@@ -311,7 +311,7 @@ public class NetworkTrainingScript : MonoBehaviour
 
     void EvaluateNeeds(CharacterStats s, AiBehaviour ab, List<Output> Results)
     {
-        ab.Network.AddFitness(s.happiness);
+        ab.Network.AddFitness(s.GetStat("happiness"));
     }
 
     void EvaluateCombat(CharacterStats s, AiBehaviour ab, List<Output> Results)
@@ -330,7 +330,7 @@ public class NetworkTrainingScript : MonoBehaviour
             case 1:
                 {
                     // If the bot is dodging and low on hp give them 5 points
-                    if (s.health <= s.maxHealth * 0.1)
+                    if (s.GetStat("health") <= s.maxHealth * 0.1)
                     {
                         ab.Network.AddFitness(5);
                     }
@@ -344,7 +344,7 @@ public class NetworkTrainingScript : MonoBehaviour
             case 2:
                 {
                     // If the bot is low on stamina and waiting gove them 5 points
-                    if (s.stamina < 2)
+                    if (s.GetStat("stamina") < 2)
                     {
                         ab.Network.AddFitness(5);
                     }
