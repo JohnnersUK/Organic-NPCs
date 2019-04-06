@@ -55,6 +55,9 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] private float debug = 0.0f;
     [SerializeField] private float rTime;
 
+    [SerializeField] private ParticleSystem happy = null;
+    [SerializeField] private ParticleSystem sad = null;
+
     // A dictionary of the character stats, for easy lookup and access
     public IDictionary<string, float> table = new Dictionary<string, float>()
     {
@@ -94,10 +97,6 @@ public class CharacterStats : MonoBehaviour
         {Factions.Neutral, 50.0f}
     };
 
-    [SerializeField] private ParticleSystem happy = null;
-    [SerializeField] private ParticleSystem sad = null;
-
-    // Use this for initialization
     void Start()
     {
         hModifiers = new List<float>();
@@ -109,7 +108,6 @@ public class CharacterStats : MonoBehaviour
         stamina = maxStamina;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (invincible)
@@ -126,6 +124,7 @@ public class CharacterStats : MonoBehaviour
         UpdateStats();
     }
 
+    // Calculates damage and stats on hit
     public void GetHit(GameObject agent, float dmg)
     {
         if (!invincible)
@@ -138,6 +137,7 @@ public class CharacterStats : MonoBehaviour
         DecreaseRelationship(agent, 10.0f);
         hModifiers.Add(-0.5f);
 
+        // Stops guard v guard violence
         if (GetComponent<CombatController>() != null)
         {
             if (faction == Factions.Guards && agent.GetComponent<CharacterStats>().faction == Factions.Guards)
@@ -181,7 +181,7 @@ public class CharacterStats : MonoBehaviour
     private void UpdateStats()
     {
         // Stats
-        // Decrease the stats over time and clap them between 0 and 100
+        // Decrease the stats over time and clamp them between 0 and 100
         table["hunger"] = Mathf.Clamp(table["hunger"] - 1 * Time.deltaTime, 0.0f, 100.0f);
         if (table["hunger"] == 0)    // If hunger is equal to zero, lose health
         {
@@ -234,6 +234,7 @@ public class CharacterStats : MonoBehaviour
             }
         }
 
+        // Update inspector stats
         health = table["health"];
         stamina = table["stamina"];
         damage = table["damage"];
