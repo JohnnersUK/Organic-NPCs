@@ -188,11 +188,11 @@ public class CharacterStats : MonoBehaviour
             //health -= 1 * Time.deltaTime;
             // Dissabled from gameplay testing feedback
         }
-
         table["boredom"] = Mathf.Clamp(table["boredom"] - 0.5f * Time.deltaTime, 0.0f, 100.0f);
         table["social"] = Mathf.Clamp(table["social"] - 1 * Time.deltaTime, 0.0f, 100.0f);
         table["fatigue"] = Mathf.Clamp(table["fatigue"] - 0.1f * Time.deltaTime, 0.0f, 100.0f);
 
+        // Calculate emotion decay, clamp at 0
         table["happiness"] = CalculateHappiness();
         table["anger"] = ((table["anger"] <= 0) ? 0 : table["anger"] - Time.deltaTime * 0.1f);
         table["fear"] = ((table["fear"] <= 0) ? 0 : table["fear"] - Time.deltaTime * 0.1f);

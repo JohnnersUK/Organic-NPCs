@@ -1,25 +1,32 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using UnityStandardAssets.Characters.ThirdPerson;
 
 public class NeedsController : AiBehaviour
 {
+    [SerializeField] private GameObject TempInteractable;
+    private GameObject tmp;
+
     // Components
     private Animator Anim;
     private NavMeshAgent AIAgent;
-    public GameObject Target { private get; set; }
+    private GameObject Target;
+    private ThirdPersonCharacter TPController;
 
     private Interactable[] Objects;
 
     private string ActionTag;
 
-    private bool Using = false;
+    private bool Doing = false;
 
-    public float EventCounter { private get; set; }
-    public EventType EventType { private get; set; }
+    private bool UnresolvedEvent;
+    private float EventCounter;
+    private EventType CurrentEventType;
 
     private Stack ActionQueue = new Stack();
 
@@ -28,7 +35,7 @@ public class NeedsController : AiBehaviour
         GameObject interactables;
 
         EventCounter = 0;
-        EventType = 0;
+        CurrentEventType = 0;
 
         // Set the filePath and init the network
         FilePath = Path.Combine(Application.streamingAssetsPath, "NeedsNetwork.nn");
@@ -40,6 +47,7 @@ public class NeedsController : AiBehaviour
 
         interactables = GameObject.FindGameObjectWithTag("interactables");
         Objects = interactables.GetComponentsInChildren<Interactable>();
+        TPController = GetComponent<ThirdPersonCharacter>();
     }
 
     public override void Update()
@@ -51,12 +59,17 @@ public class NeedsController : AiBehaviour
         Results = Network.Run(inputs);             // Pass them through the NN
     }
 
-    public void Run()
+    public override void Run()
     {
         QueueItem currentAction;
 
-        // If there is an event taking place
-        if (EventCounter > 0.0f)
+        if (Anim.GetBool("InCombat"))
+        {
+            Anim.SetBool("InCombat", false);
+        }
+
+        // If there is an unresolved event
+        if (UnresolvedEvent)
         {
             ResolveEvent();
         }
@@ -94,6 +107,15 @@ public class NeedsController : AiBehaviour
                     case "Flee":
                     Flee(currentAction.Target);
                     break;
+                    case "Hide":
+                    Hide();
+                    break;
+                    case "Idle":
+                    Idle();
+                    break;
+                    case "Aggravate":
+                    Aggravate(Target);
+                    break;
                 }
             }
         }
@@ -102,17 +124,24 @@ public class NeedsController : AiBehaviour
     private void GetNewAction()
     {
         int priority;
-
         float newDistance = 0;
         float targetDistance = 1000;
-
+        float rnd = 0;
         bool hasAction = false;
+
+        Interactable lastChecked = null;
+        NavMeshHit hit;
+        Vector3 rndDir;
+        Vector3 finalPosition;
 
         // Evaluate the NN
         Update();
         Results.Sort();
 
         priority = Results.Count - 1; // Set the priority level
+
+        SetTarget(null); // Reset the target
+        Doing = false;
 
         // Find an activity
         do
@@ -139,17 +168,24 @@ public class NeedsController : AiBehaviour
             }
 
             // Find closest object of that activity type
-            Target = null;
             foreach (Interactable element in Objects)
             {
-                // If the object is of the activity type, shares the same faction and isn't occupied
-                if (element.Type == ActionTag && (element._Factions.Count == 0 || element._Factions.Contains(Stats.faction)) && !element.Occupied)
+                // If the object is of the activity type and shares the same faction
+                if (element.Type == ActionTag && (element._Factions.Count == 0 || element._Factions.Contains(Stats.faction)))
                 {
-                    newDistance = Vector3.Distance(element.transform.position, transform.position); // Compare distance
-                    if (newDistance < targetDistance)
+                    // If the object isnt occupied, use it
+                    if (!element.Occupied)
                     {
-                        targetDistance = newDistance;
-                        Target = element.gameObject;
+                        newDistance = Vector3.Distance(element.transform.position, transform.position); // Compare distance
+                        if (newDistance < targetDistance)
+                        {
+                            targetDistance = newDistance;
+                            SetTarget(element.gameObject);
+                        }
+                    }
+                    else
+                    {
+                        lastChecked = element;
                     }
                 }
             }
@@ -163,68 +199,156 @@ public class NeedsController : AiBehaviour
                 ActionQueue.Push(new QueueItem("MoveTo", Target));
 
                 Target.GetComponent<Interactable>().Occupied = true;
+                Target.GetComponent<Interactable>().SetLastUsed(gameObject);
                 hasAction = true;
             }
-            else // Decrease the priority level and try again
+            else
             {
-                priority--;
-                if (priority < 0)
+                // Choose wether to decrease the priority and try again or get angry
+                switch (Stats.faction)
                 {
-                    priority = Results.Count - 1;  // Loop back around if no action is still available
+                    case Factions.Barbarians:
+                    {
+                        // 1 in 5 to get angry
+                        rnd = Random.Range(0, 10);
+                        break;
+                    }
+                    case Factions.Guards:
+                    {
+                        // No chance to get angry
+                        rnd = 5;
+                        break;
+                    }
+                    case Factions.Neutral:
+                    {
+                        // 1 in 20 to get angry
+                        rnd = Random.Range(0, 20);
+                        break;
+                    }
                 }
+
+                if (rnd <= 1)
+                {
+                    SetTarget(lastChecked.GetLastUsed());
+                    // Get angry
+                    ActionQueue.Push(new QueueItem("Aggravate", Target));
+                    ActionQueue.Push(new QueueItem("LookAt", Target));
+                    ActionQueue.Push(new QueueItem("MoveTo", Target));
+                    hasAction = true;
+                }
+                else
+                {
+                    // Decrease priority and try again
+                    priority--;
+                    if (priority < 0)
+                    {
+                        // Nothing left to try so idle for a turn
+                        // Random a location on the navmesh
+                        rndDir = Random.insideUnitSphere * 10;
+                        rndDir += transform.position;
+                        NavMesh.SamplePosition(rndDir, out hit, 10, 1);
+                        finalPosition = hit.position;
+
+                        // Create a temp gameobject
+                        tmp = Instantiate(TempInteractable);
+                        tmp.name = "tmp";
+                        tmp.transform.position = hit.position;
+
+                        // Move to the gameobject
+                        ActionQueue.Push(new QueueItem("Idle", Target));
+                        ActionQueue.Push(new QueueItem("MoveTo", tmp));
+
+                        hasAction = true;
+                    }
+                }
+
             }
         } while (!hasAction);
     }
 
+    // Evaluates what to do in an event
     private void ResolveEvent()
     {
+        // Random a float between the fear floor and 20
+        float rnd = Random.Range(Stats.GetStat("fear"), 20);
+
+        List<GameObject> exits = new List<GameObject>();
         QueueItem currentAction;
 
-        switch (EventType)
+        switch (CurrentEventType)
         {
             default:
+            case EventType.Death:
+            {
+                if (Stats.faction == Factions.Neutral)
+                {
+                    // Reset animations and clear the queue
+                    AIAgent.isStopped = true;
+                    Anim.Play("Base Layer.Grounded");
+                    ActionQueue.Clear();
+
+                    // Make the bot run
+                    TPController.running = true;
+
+                    // Add actions to the queue
+                    ActionQueue.Push(new QueueItem("Hide", tmp));
+                    ActionQueue.Push(new QueueItem("Flee", tmp));
+
+                    // Set event time
+                    EventCounter = 30.0f;
+                    break;
+                }
+                break;
+            }
             case EventType.Hit:
             {
                 AIAgent.isStopped = true;
                 if (ActionQueue.Count == 0) // If theres nothing in the action queue
                 {
                     Anim.Play("Base Layer.Grounded");
-                    ActionQueue.Push(new QueueItem("LookAt", Target));
+
+                    // Random between running and watching
+                    // Bot will always run if fear is greater than 
+                    if (rnd > 19f)
+                    {
+                        // Flee
+                        ActionQueue.Push(new QueueItem("Hide", tmp));
+                        ActionQueue.Push(new QueueItem("Flee", tmp));
+
+                        EventCounter = 15.0f;
+                    }
+                    else
+                    {
+                        ActionQueue.Push(new QueueItem("LookAt", Target));
+                    }
                 }
                 else // If there is something in the queue
                 {
                     currentAction = ActionQueue.Peek() as QueueItem;
-                    if (currentAction.Action != "LookAt" || currentAction.Action != "Flee")
+                    if (currentAction.Action != "LookAt" && currentAction.Action != "Flee" && currentAction.Action != "Hide")
                     {
-                        Anim.Play("Base Layer.Grounded");
-                        ActionQueue.Push(new QueueItem("LookAt", Target));
-                    }
-                }
+                        // Random between running and watching
+                        // Bot will always run if fear is greater than
+                        if (rnd > 19f)
+                        {
+                            // Flee
+                            ActionQueue.Push(new QueueItem("Hide", Target));
+                            ActionQueue.Push(new QueueItem("Flee", Target));
 
-                EventCounter -= Time.deltaTime;
-                if (EventCounter <= 0.0f)
-                {
-                    currentAction = ActionQueue.Peek() as QueueItem;
-                    if (currentAction.Action == "LookAt")
-                    {
-                        ActionQueue.Pop();
+                            EventCounter = 15.0f;
+                        }
+                        else
+                        {
+                            Anim.Play("Base Layer.Grounded");
+                            ActionQueue.Push(new QueueItem("LookAt", Target));
+                        }
                     }
-                }
-                break;
-            }
-            case EventType.Death:
-            {
-                if (Stats.faction == Factions.Neutral)
-                {
-                    AIAgent.isStopped = true;
-                    Anim.Play("Base Layer.Grounded");
-                    ActionQueue.Clear();
-
-                    ActionQueue.Push(new QueueItem("Flee", Target));
                 }
                 break;
             }
         }
+
+        UnresolvedEvent = false;
     }
 
     // Move to a location
@@ -233,18 +357,50 @@ public class NeedsController : AiBehaviour
         Anim.Play("Base Layer.Grounded");
         GetComponentInChildren<Text>().text = "Moving to object";
 
-        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
+        // If the object has an interaction point
+        if (t.GetComponent<Interactable>() != null)
         {
-            if (AIAgent.isOnNavMesh)
+            // Move to it
+            if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
             {
-                AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
-                AIAgent.isStopped = false;
+                if (AIAgent.isOnNavMesh)
+                {
+                    AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
+                    AIAgent.isStopped = false;
+                }
+            }
+            else
+            {
+                // If moving to a temporary location
+                if (tmp != null)
+                {
+                    Destroy(tmp);
+                    tmp = null;
+                }
+
+                // When close enough, stop
+                ActionQueue.Pop();
             }
         }
         else
         {
-            ActionQueue.Pop();
+            // Else move directly to the object
+            if (Vector3.Distance(t.transform.position, transform.position) > 2.5)
+            {
+                if (AIAgent.isOnNavMesh)
+                {
+                    AIAgent.SetDestination(t.transform.position);
+                    AIAgent.isStopped = false;
+                }
+            }
+            else
+            {
+                // When close enough, stop
+                ActionQueue.Pop();
+            }
+
         }
+
     }
 
     // Use an interactable object
@@ -252,14 +408,21 @@ public class NeedsController : AiBehaviour
     {
         GetComponentInChildren<Text>().text = t.tag + "ing";
 
-        if (Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
+
+        if (Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
         {
+            // If the item has finished being used
             ActionQueue.Pop();
-            Using = false;
-            t.GetComponent<Interactable>().Occupied = false;
+
+            Doing = false;
+
+            SetTarget(null);
         }
-        else if (!Using && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
+        else if (!Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + t.tag))
         {
+            // If the item hasn't started being used
+
+            // Play the coresponding animation, per faction
             Anim.Play("Base Layer." + Stats.faction.ToString() + "." + t.tag);
 
             switch (t.tag)
@@ -281,7 +444,7 @@ public class NeedsController : AiBehaviour
                 break;
             }
 
-            Using = true;
+            Doing = true;
         }
 
     }
@@ -289,12 +452,17 @@ public class NeedsController : AiBehaviour
     // Look at the target
     private void LookAtTarget()
     {
+        if (Target == null)
+            return;
+
         Vector3 lookPos;
         Quaternion rotation;
 
         float cy;
         float ty;
         float diff;
+
+        float turnRate = Anim.GetFloat("Turn");
 
         GetComponentInChildren<Text>().text = "Looking at target";
         lookPos = Target.transform.position - transform.position;
@@ -314,11 +482,11 @@ public class NeedsController : AiBehaviour
 
         if (diff > 180)
         {
-            Anim.SetFloat("Turn", -0.5f);
+            Anim.SetFloat("Turn", turnRate - 0.1f);
         }
         else
         {
-            Anim.SetFloat("Turn", 0.5f);
+            Anim.SetFloat("Turn", turnRate + 0.1f);
         }
 
         // Turn the character
@@ -327,30 +495,161 @@ public class NeedsController : AiBehaviour
         // If the current rotation is within 1 degree
         if (Quaternion.Angle(transform.rotation, rotation) <= 1)
         {
+            Anim.SetFloat("Turn", 0);
             ActionQueue.Pop();
         }
     }
 
+    // Run to an exit
     private void Flee(GameObject t)
     {
-        Anim.Play("Base Layer.Grounded");
-        GetComponentInChildren<Text>().text = "Moving to object";
+        NavMeshHit hit;
+        Vector3 rndDir;
+        Vector3 finalPosition;
 
-        if (Vector3.Distance(t.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
+        if (!Doing || tmp == null)
         {
-            if (AIAgent.isOnNavMesh)
+            TPController.running = true;
+            // Pick a random hiding spot
+            rndDir = Random.insideUnitSphere * 10;
+            rndDir += transform.position;
+            NavMesh.SamplePosition(rndDir, out hit, 10, 1);
+            finalPosition = hit.position;
+
+            // Create a temp gameobject
+            tmp = Instantiate(TempInteractable);
+            tmp.name = "tmp";
+            tmp.transform.position = hit.position;
+
+            Anim.Play("Base Layer.Grounded");
+            GetComponentInChildren<Text>().text = "Fleeing";
+
+            Doing = true;
+        }
+        else
+        {
+            if (Vector3.Distance(tmp.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
             {
-                AIAgent.SetDestination(t.GetComponent<Interactable>().InteractPoint.position);
-                AIAgent.isStopped = false;
+                if (AIAgent.isOnNavMesh)
+                {
+                    AIAgent.SetDestination(tmp.GetComponent<Interactable>().InteractPoint.position);
+                    AIAgent.isStopped = false;
+                }
             }
+            else
+            {
+                TPController.running = false;
+
+                // If moving to a temporary location
+                if (tmp != null)
+                {
+                    Destroy(tmp);
+                    tmp = null;
+                }
+
+                ActionQueue.Pop();
+                Doing = false;
+            }
+        }
+
+    }
+
+    // Play the hiding animation until the evnt is over
+    private void Hide()
+    {
+        GetComponentInChildren<Text>().text = "Hiding";
+
+        if (!Anim.GetBool("Hiding"))
+        {
+            Anim.SetBool("Hiding", true);
+            Anim.Play("Base Layer.Hiding.Crouching");
+        }
+
+        // When the event is over, stop hiding
+        EventCounter -= Time.deltaTime;
+        if (EventCounter <= 0.0f)
+        {
+            ActionQueue.Pop();
+            Anim.SetBool("Hiding", false);
         }
     }
 
-    private void SetUsing(int u)
+    // Play the idle animation
+    private void Idle()
+    {
+        GetComponentInChildren<Text>().text = "Idle";
+        if (Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Idle"))
+        {
+            // If the bot has finished being idle
+            ActionQueue.Pop();
+            Doing = false;
+        }
+        else if (!Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Idle"))
+        {
+            // If the bot hasn't started being idle
+            Anim.Play("Base Layer.Idle");
+            Doing = true;
+        }
+    }
+
+    // Aggravates the target
+    private void Aggravate(GameObject t)
+    {
+        GetComponentInChildren<Text>().text = "Angry";
+        if (Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + "Aggravate"))
+        {
+            // If the bot has finished aggravating
+            ActionQueue.Pop();
+
+            // 'Hit' for 0 damage
+            t.GetComponent<CharacterStats>().GetHit(gameObject, 0);
+            Stats.ModifyStat("anger", 1f);
+            GetComponent<CombatController>().SetTarget(t);
+
+            Doing = false;
+        }
+        else if (!Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + "Aggravate"))
+        {
+            // If the bot hasn't started aggravating
+            Anim.Play("Base Layer." + Stats.faction.ToString() + "." + "Aggravate");
+            t.GetComponent<CharacterStats>().GetHit(gameObject, 0);
+            Doing = true;
+        }
+
+    }
+
+    public void SetUsing(int u)
     {
         if (u == 1)
         {
-            Using = true;
+            Doing = true;
         }
+    }
+
+    public void SetEvent(EventType et)
+    {
+        UnresolvedEvent = true;
+        CurrentEventType = et;
+    }
+
+    public void SetTarget(GameObject t)
+    {
+        if (Target != null)
+        {
+            // Remove occupation of old target
+            if (Target.GetComponent<Interactable>() != null)
+            {
+                Target.GetComponent<Interactable>().Occupied = false;
+            }
+        }
+
+
+        // Set new target and occupation
+        Target = t;
+        if (t != null && t.GetComponent<Interactable>() != null)
+        {
+            t.GetComponent<Interactable>().Occupied = true;
+        }
+
     }
 }

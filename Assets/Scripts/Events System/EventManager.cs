@@ -9,10 +9,20 @@ using UnityEngine.SceneManagement;
 public class EventManager : MonoBehaviour
 {
     public static EventManager instance = null;
+
     [SerializeField] private NetworkTrainingScript nts = null;
     [SerializeField] private ResetPlayer rp = null;
 
+    [SerializeField] private GameObject BotPrefab = null;
+    [SerializeField] private Transform Enterance = null;
+    [SerializeField] private bool SpawnBot = false;
+
     private bool playerLoaded = false;
+
+    // Extra bots
+    private List<GameObject> ExtraBots;
+    private float WeightedSpawn;
+    private float cooldown;
 
     // Hit event
     public delegate void HitEventHandler(object source, PublicEventArgs args);
@@ -77,6 +87,11 @@ public class EventManager : MonoBehaviour
             }
             playerLoaded = true;
         }
+
+        ExtraBots = new List<GameObject>();
+
+        WeightedSpawn = 1000f;
+        cooldown = 0.0f;
     }
 
     private void Update()
@@ -96,6 +111,81 @@ public class EventManager : MonoBehaviour
             }
             playerLoaded = true;
         }
+
+        cooldown -= Time.deltaTime;
+        if (cooldown <= 0)
+        {
+            if (UnityEngine.Random.Range(0, WeightedSpawn) < 2)
+            {
+                AddBot();
+                WeightedSpawn = 1000f;
+                cooldown = 10f;
+            }
+            else
+            {
+                WeightedSpawn -= Time.deltaTime;
+            }
+        }
+
+        if(SpawnBot)
+        {
+            AddBot();
+            SpawnBot = false;
+        }
+
+    }
+
+    void AddBot()
+    {
+        List<AttackCollider> ac;
+        // Initilize the bots and assign a faction
+        GameObject b = Instantiate(BotPrefab, Enterance.position, Enterance.rotation);
+        b.GetComponent<CharacterStats>().faction = (Factions)UnityEngine.Random.Range(0,3);
+
+
+        // name and color the bot to make it identifiable
+        b.name = "New bot " + " " + b.GetComponent<CharacterStats>().faction.ToString();
+        foreach (SkinnedMeshRenderer smr in b.GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            if (smr.material.color == new Color(0.09657001f, 0.4216198f, 0.522f, 1))
+            {
+                switch (b.GetComponent<CharacterStats>().faction)
+                {
+                    case Factions.Neutral:
+                    {
+                        // Random green
+                        smr.material.color = UnityEngine.Random.ColorHSV(0.22f, 0.38f, 0.2f, 0.8f, 0.2f, 0.8f);
+                        break;
+                    }
+                    case Factions.Barbarians:
+                    {
+                        // Random red
+                        smr.material.color = UnityEngine.Random.ColorHSV(0f, 0.08f, 0.2f, 0.8f, 0.2f, 0.8f);
+                        break;
+                    }
+                    case Factions.Guards:
+                    {
+                        // Random blue
+                        smr.material.color = UnityEngine.Random.ColorHSV(0.55f, 0.72f, 0.2f, 0.8f, 0.2f, 0.8f);
+                        break;
+                    }
+                }
+            }
+
+            // Get the death event
+            b.GetComponent<AgentController>().DeathEvent += OnPublicEvent;
+
+            // Get the attack event
+            ac = new List<AttackCollider>();
+            ac.AddRange(b.GetComponentsInChildren<AttackCollider>());
+
+            foreach (AttackCollider a in ac)
+            {
+                a.HitEvent += OnPublicEvent;
+            }
+        }
+
+        ExtraBots.Add(b);
     }
 
     // Whenever a public event is triggered sort it and send it to all handlers
@@ -152,7 +242,16 @@ public class EventManager : MonoBehaviour
 
     public void OnRoundStart()
     {
+        GameObject b = null;
+
         DeathEvent = null;
         HitEvent = null;
+
+        for (int i = ExtraBots.Count - 1; i > -1; i--)
+        {
+            b = ExtraBots[i];
+            ExtraBots.Remove(b);
+            Destroy(b);
+        }
     }
 }

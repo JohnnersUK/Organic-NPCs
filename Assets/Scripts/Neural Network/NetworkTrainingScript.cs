@@ -23,7 +23,7 @@ public class NetworkTrainingScript : MonoBehaviour
     [Header("Simulation Settings:")]
     [SerializeField] Networks trainingNetwork = 0;
 
-    [SerializeField] private int simultaionNum = 0;
+    [SerializeField] private int Simulations = 0;
 
     [Range(1, 20)]
     [SerializeField] private float simulationSpeed = 1.0f;
@@ -67,8 +67,6 @@ public class NetworkTrainingScript : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;
 
         int i = 0;
-
-        simultaionNum = 1;
 
         interactables = GameObject.FindGameObjectWithTag("interactables");
         objects = interactables.GetComponentsInChildren<Interactable>();
@@ -115,17 +113,20 @@ public class NetworkTrainingScript : MonoBehaviour
                     {
                         case Factions.Neutral:
                         {
-                            smr.material.color = Color.white;
+                            // Random green
+                            smr.material.color = Random.ColorHSV(0.22f, 0.38f, 0.2f, 0.8f, 0.2f, 0.8f);
                             break;
                         }
                         case Factions.Barbarians:
                         {
-                            smr.material.color = Color.red;
+                            // Random red
+                            smr.material.color = Random.ColorHSV(0f, 0.08f, 0.2f, 0.8f, 0.2f, 0.8f);
                             break;
                         }
                         case Factions.Guards:
                         {
-                            smr.material.color = Color.blue;
+                            // Random blue
+                            smr.material.color = Random.ColorHSV(0.55f, 0.72f, 0.2f, 0.8f, 0.2f, 0.8f);
                             break;
                         }
                     }
@@ -145,7 +146,6 @@ public class NetworkTrainingScript : MonoBehaviour
                 nodes[i].GetComponent<TrainingController>().Start();
 
                 _Behaviours.Add(nodes[i].GetComponent<TrainingController>());
-
             }
         }
     }
@@ -156,15 +156,36 @@ public class NetworkTrainingScript : MonoBehaviour
         fileName = trainingNetwork.ToString() + ".nn";
         Time.timeScale = simulationSpeed;
 
-        count -= 1 * Time.deltaTime;
-        if (count <= 0)
+        // If a number of simulations are set
+        if (Simulations > 0)
         {
-            StartNewRound();
-        }
+            // Begin simulating
+            count -= 1 * Time.deltaTime;
 
-        if (intensiveTraining)
-        {
-            TrainNodes();
+            // If simulation time is up
+            if (count <= 0)
+            {
+                Simulations--;
+
+                // If there are still simulations remaining
+                if (Simulations != 0)
+                {
+                    StartNewRound();
+
+                    if (intensiveTraining)
+                    {
+                        TrainNodes();
+                    }
+                }
+                else
+                {
+                    #if UNITY_EDITOR
+                    UnityEditor.EditorApplication.isPlaying = false;
+                    #else
+                    Application.Quit();
+                    #endif
+                }
+            }
         }
     }
 
@@ -237,11 +258,10 @@ public class NetworkTrainingScript : MonoBehaviour
         }
 
         count = simulationTime;
-        simultaionNum++;
 
         EventManager.instance.Start();
 
-        Debug.Log("Begining simulation " + simultaionNum);
+        Debug.Log("Begining simulation");
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)

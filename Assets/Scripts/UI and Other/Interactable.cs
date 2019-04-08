@@ -10,9 +10,21 @@ public class Interactable : MonoBehaviour
 
     public Transform InteractPoint;
 
+    private GameObject lastUsed;
+
     private void Start()
     {
         Type = gameObject.tag;
         Occupied = false;
+    }
+
+    public void SetLastUsed(GameObject obj)
+    {
+        lastUsed = obj;
+    }
+
+    public GameObject GetLastUsed()
+    {
+        return lastUsed;
     }
 }

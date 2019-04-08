@@ -9,8 +9,8 @@ public class ResetPlayer : MonoBehaviour
 
     [Header("Player Setup:")]
     public GameObject player;
-    [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private Transform spawn;
+    [SerializeField] private GameObject playerPrefab = null;
+    [SerializeField] private Transform spawn = null;
 
     // Update is called once per frame
     public void Start()

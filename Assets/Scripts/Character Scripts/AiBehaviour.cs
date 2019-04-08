@@ -62,4 +62,9 @@ public class AiBehaviour : MonoBehaviour
         inputs = Stats.GetStats(Inputs);        // Update the inputs
         Results = Network.Run(inputs);             // Pass them through the NN
     }
+
+    public virtual void Run()
+    {
+        return;
+    }
 }

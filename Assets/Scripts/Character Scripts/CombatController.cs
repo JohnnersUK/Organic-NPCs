@@ -15,6 +15,7 @@ public class CombatController : AiBehaviour
     private Animator Anim;
     private NavMeshAgent AIAgent;
     private GameObject CombatTarget;
+    private NeedsController NController;
 
     public override void Start()
     {
@@ -26,10 +27,22 @@ public class CombatController : AiBehaviour
         Anim = GetComponent<Animator>();
         AIAgent = GetComponent<NavMeshAgent>();
         Stats = GetComponent<CharacterStats>();
+
+        NController = GetComponent<NeedsController>();
     }
 
-    public void Run()
+    public override void Run()
     {
+        if (!Anim.GetBool("InCombat"))
+        {
+            Anim.SetBool("InCombat", true);
+            Anim.Play("Base Layer.Grounded");
+
+            // If the bot was using something before combat
+            NController.SetTarget(null);
+        }
+            
+
         while (CombatTarget == null)
         {
             FindTarget();

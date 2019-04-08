@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -8,6 +9,7 @@ using UnityStandardAssets.Characters.ThirdPerson;
 public class AgentController : AiBehaviour
 {
     [SerializeField] private Material DeadMat = null;
+    [SerializeField] private AiBehaviour[] Behaviours = null;
 
     // Interactions
     private Transform InteractPoint;
@@ -45,6 +47,7 @@ public class AgentController : AiBehaviour
         Anim = GetComponent<Animator>();
         Stats = GetComponent<CharacterStats>();
 
+        // Add Behaviors
         CController = GetComponent<CombatController>();
         NController = GetComponent<NeedsController>();
 
@@ -57,9 +60,12 @@ public class AgentController : AiBehaviour
 
     public override void Update()
     {
+        int i = 1;
+        bool invalid = true;
         float[] inputs;
 
         SkinnedMeshRenderer[] skin;
+        AttackCollider[] colliders;
 
         if (currentState == State.Dead)
         {
@@ -90,65 +96,56 @@ public class AgentController : AiBehaviour
             Results = Network.Run(inputs);       // Pass them through the NN
             Results.Sort();                      // Sort the list of results
 
-            currentState = (State)Results[Results.Count - 1].ID;  // Set the result
+            // Run the best, valid behavior
+            // This allows behaviors to be swapped out at will
+            do
+            {
+                if (Behaviours[Results[Results.Count - i].ID] != null)
+                {
+                    Behaviours[Results[Results.Count - i].ID].Run();
+                    invalid = false;
+                }
+                else
+                {
+                    i++;
+                }
+
+            } while (invalid);
+
+            NController.Network.AddFitness(Stats.GetStat("happiness") * Time.deltaTime);
         }
         else
         {
-            currentState = State.Dead;
+            if (currentState != State.Dead)
+            {
+                currentState = State.Dead;
+
+                // Do nothing
+                if (!Anim.GetBool("Dead"))
+                {
+                    Anim.SetBool("Dead", true);
+                    Anim.Play("Base Layer.Dead");
+                    SendDeathEvent();
+                }
+
+                skin = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                foreach (SkinnedMeshRenderer smr in skin)
+                {
+                    smr.material = DeadMat;
+                }
+
+                AIAgent.isStopped = true;
+                GetComponentInChildren<Text>().text = "Dead";
+
+                colliders = GetComponentsInChildren<AttackCollider>();
+
+                foreach (AttackCollider sc in colliders)
+                {
+                    sc.enabled = false;
+                }
+            }
         }
-
-        // Run the current state
-        switch (currentState)
-        {
-            case State.Idle: // If idle, run the idle loop
-                {
-                    if (Anim.GetBool("InCombat"))
-                    {
-                        Anim.SetBool("InCombat", false);
-                    }
-
-                    NController.Run();
-                    break;
-                }
-            case State.Combat: // If in combat, run the combat loop
-                {
-                    if (!Anim.GetBool("InCombat"))
-                    {
-                        Anim.SetBool("InCombat", true);
-                        Anim.Play("Base Layer.Combat.Locomotion");
-                    }
-
-                    CController.Run();
-                    break;
-                }
-            case State.Dead:
-                {
-                    // Do nothing
-                    if (!Anim.GetBool("Dead"))
-                    {
-                        Anim.SetBool("Dead", true);
-                        Anim.Play("Base Layer.Dead");
-                        SendDeathEvent();
-                    }
-
-                    skin = GetComponentsInChildren<SkinnedMeshRenderer>();
-
-                    foreach (SkinnedMeshRenderer smr in skin)
-                    {
-                        smr.material = DeadMat;
-                    }
-
-                    AIAgent.isStopped = true;
-                    GetComponentInChildren<Text>().text = "Dead";
-
-                    // Bots can no longer gain fitness whilst dead
-                    NController.Network.AddFitness(-Stats.GetStat("happiness"));
-
-                    break;
-                }
-        }
-
-        NController.Network.AddFitness(Stats.GetStat("happiness") * Time.deltaTime);
     }
 
     // A nearby robot has been hit
@@ -178,39 +175,38 @@ public class AgentController : AiBehaviour
             {
                 default:
                 case Factions.Neutral:
-                    {
-                        // Interuption event and add fear
-                        NController.EventCounter = 1.0f;
-                        NController.Target = args.Agent;
-                        NController.EventType = EventType.Hit;
-                        Stats.ModifyStat("fear", 1.0f);
-                        break;
-                    }
+                {
+                    // Interuption event and add fear
+                    NController.SetEvent(EventType.Hit);
+                    
+                    NController.SetTarget(args.Agent);
+                    Stats.ModifyStat("fear", 1.0f);
+                    break;
+                }
                 case Factions.Barbarians:
+                {
+                    // Join in fight
+                    if (subjectStats.faction == Stats.faction)
                     {
-                        // Join in fight
-                        if (subjectStats.faction == Stats.faction)
-                        {
-                            Stats.ModifyStat("anger", 10.0f);
-                            CController.SetTarget(args.Agent);
-                        }
-                        else
-                        {
-                            NController.EventCounter = 1.0f;
-                            NController.Target = args.Agent;
-                        }
-                        break;
+                        Stats.ModifyStat("anger", 10.0f);
+                        CController.SetTarget(args.Agent);
                     }
+                    else
+                    {
+                        NController.SetTarget(args.Agent);
+                    }
+                    break;
+                }
                 case Factions.Guards:
+                {
+                    // Attack offender
+                    if (agentStats.faction != Factions.Guards)
                     {
-                        // Attack offender
-                        if (agentStats.faction != Factions.Guards)
-                        {
-                            Stats.ModifyStat("anger", 10.0f);
-                            CController.SetTarget(args.Agent);
-                        }
-                        break;
+                        Stats.ModifyStat("anger", 10.0f);
+                        CController.SetTarget(args.Agent);
                     }
+                    break;
+                }
             }
         }
     }
@@ -226,24 +222,23 @@ public class AgentController : AiBehaviour
             {
                 default:
                 case Factions.Neutral:
-                    {
-                        // Flee
-                        NController.EventCounter = 1.0f;
-                        NController.EventType = EventType.Death;
-                        NController.Target = GameObject.FindGameObjectWithTag("Exit");
-                        Stats.ModifyStat("fear", 10.0f);
-                        break;
-                    }
+                {
+                    // Flee
+                    NController.SetEvent(EventType.Death);
+
+                    Stats.ModifyStat("fear", 10.0f);
+                    break;
+                }
                 case Factions.Barbarians:
-                    {
-                        // Barbarians do not care for mortal death
-                        break;
-                    }
+                {
+                    // Barbarians do not care for mortal death
+                    break;
+                }
                 case Factions.Guards:
-                    {
-                        // Call for backup
-                        break;
-                    }
+                {
+                    // Call for backup
+                    break;
+                }
             }
         }
     }
