@@ -7,4 +7,9 @@ public class EndDodge : StateMachineBehaviour
     {
         animator.SetInteger("Dodge", 0);
     }
+
+    public override void OnStateExit(Animator animator, AnimatorStateInfo animatorStateInfo, int layerIndex)
+    {
+        animator.SetInteger("Dodge", 0);
+    }
 }

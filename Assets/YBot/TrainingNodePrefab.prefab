@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 114271303011930682}
   - component: {fileID: 114572918358787500}
   m_Layer: 0
-  m_Name: TrainingNode
+  m_Name: TrainingNodePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

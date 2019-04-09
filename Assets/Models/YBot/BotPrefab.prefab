@@ -151,8 +151,8 @@ GameObject:
   - component: {fileID: 114415583407265424}
   - component: {fileID: 114311686872391452}
   - component: {fileID: 114065078771310900}
-  - component: {fileID: 114234752497460744}
   - component: {fileID: 114159856779782752}
+  - component: {fileID: 114234752497460744}
   m_Layer: 0
   m_Name: BotPrefab
   m_TagString: character
@@ -2567,6 +2567,8 @@ MonoBehaviour:
   Behaviours:
   - {fileID: 114159856779782752}
   - {fileID: 114234752497460744}
+  FallSpeed: 0.2
+  DeathDelay: 10
 --- !u!114 &114159856779782752
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2603,7 +2605,7 @@ MonoBehaviour:
   Inputs:
   - health
   - stamina
-  - damage
+  - rcount
   HiddenLayers: 030000000300000003000000
   Outputs: 3
   AttackCost: 1

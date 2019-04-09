@@ -39,16 +39,22 @@ public class CombatController : AiBehaviour
             Anim.Play("Base Layer.Grounded");
 
             // If the bot was using something before combat
-            NController.SetTarget(null);
+            NController.ClearQueue();
         }
             
-
+        // If there isn't a target find one
         while (CombatTarget == null)
         {
-            FindTarget();
+            // If you cant' find one, return
+            if(!FindTarget())
+            {
+                GetComponentInChildren<Text>().text = "No Target";
+                return;
+            }
         }
         LookAtTarget();
 
+        // If the target is dead, forget about it or move on
         if (CombatTarget.GetComponent<CharacterStats>().GetStat("health") <= 0)
         {
             Stats.ModifyStat("anger", -Stats.GetStat("anger"));
@@ -56,6 +62,7 @@ public class CombatController : AiBehaviour
         }
 
         // Evaluate the NN
+        Update();
         Results.Sort();
 
         switch (Results[Results.Count - 1].ID)
@@ -74,7 +81,6 @@ public class CombatController : AiBehaviour
                 }
                 else
                 {
-                    AIAgent.isStopped = true;
                     if (Stats.GetStat("stamina") > 0)
                     {
                         GetComponentInChildren<Text>().text = "Attacking";
@@ -95,12 +101,14 @@ public class CombatController : AiBehaviour
             }
             case 1:
             {
-                AIAgent.isStopped = true;
+
                 if (Stats.GetStat("stamina") > 0)
                 {
                     GetComponentInChildren<Text>().text = "Dodging";
 
                     Stats.ModifyStat("stamina", -DodgeCost);
+                    Stats.ModifyStat("rcount", -Stats.GetStat("rcount"));
+
                     Anim.SetInteger("Dodge", Random.Range(-5, 5));
                 }
                 else
@@ -162,7 +170,19 @@ public class CombatController : AiBehaviour
 
     public void SetTarget(GameObject t)
     {
-        CombatTarget = t;
+        // Guards need to remember their first target
+        if(Stats.faction == Factions.Guards)
+        {
+            if(CombatTarget == null)
+            {
+                CombatTarget = t;
+            }
+        }
+        else
+        {
+            CombatTarget = t;
+        }
+        
     }
 
     // Finds nearest combat target
@@ -179,7 +199,7 @@ public class CombatController : AiBehaviour
         {
             foreach (GameObject element in objects)
             {
-                if (element.name != name) // And the enemy isn't itself ヽ( ͡ಠ ʖ̯ ͡ಠ)ﾉ
+                if (element.name != name && element.GetComponent<CharacterStats>().GetStat("health") > 0) // And the enemy isn't itself or deadヽ( ͡ಠ ʖ̯ ͡ಠ)ﾉ
                 {
                     newDistance = Vector3.Distance(element.transform.position, transform.position); // Compare distance
                     if (newDistance < targetDistance)

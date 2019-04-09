@@ -126,7 +126,7 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     // Mutate the weights
     public void Mutate()
     {
-        int rand;
+        int rnd;
 
         for (int i = 0; i < _weights.Length; i++)
         {
@@ -136,8 +136,8 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
                 {
                     float currentWeight = _weights[i][j][k];
 
-                    rand = UnityEngine.Random.Range(0, 4);
-                    switch (rand)
+                    rnd = UnityEngine.Random.Range(0, 4);
+                    switch (rnd)
                     {
                         default:
                         case 0:
@@ -186,18 +186,10 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
         _weights = w;
     }
 
-
     public float[][][] GetWeights()
     {
         return _weights;
     }
-
-
-    public void AddFitness(float val)
-    {
-        fitness += val;
-    }
-
 
     public float GetFitness()
     {
@@ -207,5 +199,10 @@ public class NeuralNetwork : IComparable<NeuralNetwork>
     public float[][] GetNeurons()
     {
         return _neurons;
+    }
+
+    public void AddFitness(float val)
+    {
+        fitness += val;
     }
 }

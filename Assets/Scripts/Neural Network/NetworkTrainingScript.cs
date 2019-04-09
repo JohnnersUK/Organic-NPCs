@@ -17,25 +17,26 @@ public class NetworkTrainingScript : MonoBehaviour
 
     public List<AiBehaviour> _Behaviours { get; private set; }
 
+    [Header("Simulation Settings:")]
+    [SerializeField] Networks TrainingNetwork = 0;
+
     [SerializeField] private bool intensiveTraining = false;
     [SerializeField] private int itCount = 0;
 
-    [Header("Simulation Settings:")]
-    [SerializeField] Networks trainingNetwork = 0;
-
-    [SerializeField] private int Simulations = 0;
+    [SerializeField] private int NumOfSimulations = 0;
 
     [Range(1, 20)]
     [SerializeField] private float simulationSpeed = 1.0f;
 
     [SerializeField] private float simulationTime = 300;
 
-    [SerializeField] private GameObject botPrefab = null;
-    [SerializeField] private GameObject nodePrefab = null;
-
     [Header("Storage:")]
     [SerializeField] private string fileName = "data.json";
     [SerializeField] private bool saveWeights = false;
+
+    [Header("Prefabs:")]
+    [SerializeField] private GameObject botPrefab = null;
+    [SerializeField] private GameObject nodePrefab = null;
 
     // Private
     private Transform[] spawnPoints = null;
@@ -53,7 +54,9 @@ public class NetworkTrainingScript : MonoBehaviour
     {
         GameObject interactables;
         GameObject tsp;
+        int i = 0;
 
+        // Make sure this is the only instance, then set the instance
         DontDestroyOnLoad(gameObject);
         foreach (NetworkTrainingScript im in FindObjectsOfType<NetworkTrainingScript>())
         {
@@ -62,32 +65,35 @@ public class NetworkTrainingScript : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-
         Instance = this;
+
+        // Subsctibe to the scene load event
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        int i = 0;
-
+        // Find all interactibles
         interactables = GameObject.FindGameObjectWithTag("interactables");
         objects = interactables.GetComponentsInChildren<Interactable>();
 
+        // Set the timer and simulation speed
         count = simulationTime;
-
         Time.timeScale = simulationSpeed;
 
+        // Find all spawn points
         tsp = GameObject.FindGameObjectWithTag("SpawnPoints");
         spawnPoints = tsp.GetComponentsInChildren<Transform>();
 
+        // Initialize the bot array
         Bots = new GameObject[spawnPoints.Length];
         _Behaviours = new List<AiBehaviour>();
 
         foreach (Transform T in spawnPoints)
         {
-            // Initilize the bots and assign a faction
+            // Spawn the bots and assign a faction
             Bots[i] = Instantiate(botPrefab, T.position, T.rotation);
             Bots[i].GetComponent<CharacterStats>().faction = (Factions)Random.Range(0, 3);
 
-            switch (trainingNetwork)
+            // Add the behavior being trained to the list of behaviors
+            switch (TrainingNetwork)
             {
                 case Networks.CombatNetwork:
                 _Behaviours.Add(Bots[i].GetComponent<CombatController>());
@@ -135,7 +141,7 @@ public class NetworkTrainingScript : MonoBehaviour
             i++;
         }
 
-        // Intensive training
+        // If intensively training, spawn training nodes
         if (intensiveTraining)
         {
             nodes = new GameObject[itCount];
@@ -143,42 +149,44 @@ public class NetworkTrainingScript : MonoBehaviour
             {
                 // Init the training node
                 nodes[i] = Instantiate(nodePrefab, new Vector3(-10, -10, -10), new Quaternion());
-                nodes[i].GetComponent<TrainingController>().Start();
+                nodes[i].GetComponent<TrainingController>().Initialize(i);
 
                 _Behaviours.Add(nodes[i].GetComponent<TrainingController>());
             }
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        fileName = trainingNetwork.ToString() + ".nn";
+        // Set the correct filename and simulation speed
+        fileName = TrainingNetwork.ToString() + ".nn";
         Time.timeScale = simulationSpeed;
 
         // If a number of simulations are set
-        if (Simulations > 0)
+        if (NumOfSimulations > 0)
         {
             // Begin simulating
             count -= 1 * Time.deltaTime;
 
+            // If intensively training, train the nodes
+            if (intensiveTraining)
+            {
+                TrainNodes();
+            }
+
             // If simulation time is up
             if (count <= 0)
             {
-                Simulations--;
+                NumOfSimulations--;
 
                 // If there are still simulations remaining
-                if (Simulations != 0)
+                if (NumOfSimulations != 0)
                 {
                     StartNewRound();
-
-                    if (intensiveTraining)
-                    {
-                        TrainNodes();
-                    }
                 }
                 else
                 {
+                    // Exit the aplication
                     #if UNITY_EDITOR
                     UnityEditor.EditorApplication.isPlaying = false;
                     #else
@@ -189,14 +197,19 @@ public class NetworkTrainingScript : MonoBehaviour
         }
     }
 
+    // Start a new training round
     void StartNewRound()
     {
         int i, k;
         List<NeuralNetwork> networks = new List<NeuralNetwork>();
         tempWeights = new List<float[][][]>();
 
+        // Reset vital components
         EventManager.instance.OnRoundStart();
+        CreateNetworkGraph.instance.StartNewRound();
+        GetComponent<PlayerResetScript>().ResetPlayer();
 
+        // Get the networks in each behavior
         foreach (AiBehaviour b in _Behaviours)
         {
             networks.Add(b.Network);
@@ -208,7 +221,6 @@ public class NetworkTrainingScript : MonoBehaviour
         // Save the weights
         if (saveWeights)
         {
-            saveWeights = false;
             string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
             NetworkIO.instance.SerializeObject<NeuralNetwork>(filePath, networks[networks.Count - 1]);
             Debug.Log("Top Weights saved");
@@ -251,7 +263,7 @@ public class NetworkTrainingScript : MonoBehaviour
             }
         }
 
-        // Reset the interactables
+        // Reset the interactables and vital components
         for (i = 0; i < objects.Length; i++)
         {
             objects[i].Occupied = false;
@@ -264,11 +276,13 @@ public class NetworkTrainingScript : MonoBehaviour
         Debug.Log("Begining simulation");
     }
 
+    // If a new scene is loaded, restart
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Start();
     }
 
+    // Trains the intensive training nodes
     void TrainNodes()
     {
         CharacterStats s;
@@ -288,11 +302,10 @@ public class NetworkTrainingScript : MonoBehaviour
 
             // Evaluate the outputs
             Results = ab.Results;
-
             Results.Sort();
 
             // Award fitness
-            switch (trainingNetwork)
+            switch (TrainingNetwork)
             {
                 case Networks.CombatNetwork:
                 EvaluateCombat(s, ab, Results);
@@ -307,6 +320,7 @@ public class NetworkTrainingScript : MonoBehaviour
         }
     }
 
+    // Evaluate the masster network
     void EvaluateMaster(CharacterStats s, AiBehaviour ab, List<Output> Results)
     {
         switch (Results[Results.Count - 1].ID)
@@ -342,11 +356,14 @@ public class NetworkTrainingScript : MonoBehaviour
         }
     }
 
+    // Evaluate the needs network
     void EvaluateNeeds(CharacterStats s, AiBehaviour ab, List<Output> Results)
     {
         ab.Network.AddFitness(s.GetStat("happiness"));
     }
 
+
+    // Evaluate the combat network
     void EvaluateCombat(CharacterStats s, AiBehaviour ab, List<Output> Results)
     {
 
@@ -356,18 +373,26 @@ public class NetworkTrainingScript : MonoBehaviour
             case 0:
             {
                 // If the bot is attacking give them a point
-                ab.Network.AddFitness(5);
+                if (s.GetStat("rcount") < 5)
+                {
+                    ab.Network.AddFitness(5);
+                }
+                else
+                {
+                    // unless they should be dodging
+                    ab.Network.AddFitness(-5);
+                }
                 break;
             }
             // Dodge
             case 1:
             {
-                // If the bot is dodging and low on hp give them 5 points
-                if (s.GetStat("health") <= s.maxHealth * 0.1)
+                // If the bot is dodging correctly give them 5 points
+                if(s.GetStat("rcount") > 5)
                 {
                     ab.Network.AddFitness(5);
                 }
-                else // Otherwise take away a point
+                else
                 {
                     ab.Network.AddFitness(-10);
                 }
@@ -376,17 +401,36 @@ public class NetworkTrainingScript : MonoBehaviour
             // Wait
             case 2:
             {
-                // If the bot is low on stamina and waiting gove them 5 points
-                if (s.GetStat("stamina") < 2)
+                if (s.GetStat("rcount") < 5)
                 {
-                    ab.Network.AddFitness(5);
+                    // If the bot is low on stamina and waiting give them 5 points
+                    if (s.GetStat("stamina") < 2)
+                    {
+                        ab.Network.AddFitness(5);
+                    }
+                    else  // Otherwise take away a point
+                    {
+                        ab.Network.AddFitness(-10);
+                    }
                 }
-                else  // Otherwise take away a point
+                else
                 {
                     ab.Network.AddFitness(-10);
                 }
                 break;
             }
         }
+    }
+
+    // Returns the name of the network being trained
+    public string GetTrainingNetwork()
+    {
+        return TrainingNetwork.ToString();
+    }
+
+    // Returns a list of the current behaviors being trained
+    public List<AiBehaviour> GetBehaviours()
+    {
+        return _Behaviours;
     }
 }

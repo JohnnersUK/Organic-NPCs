@@ -11,7 +11,7 @@ public class EventManager : MonoBehaviour
     public static EventManager instance = null;
 
     [SerializeField] private NetworkTrainingScript nts = null;
-    [SerializeField] private ResetPlayer rp = null;
+    [SerializeField] private PlayerResetScript rp = null;
 
     [SerializeField] private GameObject BotPrefab = null;
     [SerializeField] private Transform Enterance = null;
@@ -127,7 +127,7 @@ public class EventManager : MonoBehaviour
             }
         }
 
-        if(SpawnBot)
+        if (SpawnBot)
         {
             AddBot();
             SpawnBot = false;
@@ -138,6 +138,7 @@ public class EventManager : MonoBehaviour
     void AddBot()
     {
         List<AttackCollider> ac;
+
         // Initilize the bots and assign a faction
         GameObject b = Instantiate(BotPrefab, Enterance.position, Enterance.rotation);
         b.GetComponent<CharacterStats>().faction = (Factions)UnityEngine.Random.Range(0,3);

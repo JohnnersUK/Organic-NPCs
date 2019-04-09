@@ -4,16 +4,21 @@ using UnityEngine;
 
 public class TrainingController : AiBehaviour
 {
-    public override void Start()
+    public void Initialize(int count)
     {
-        name = "Training Node ";
+        string pathString;
 
+        name = "Training Node " + count;
+
+        // Coppy network from existing bot
         Inputs = NetworkTrainingScript.Instance._Behaviours[0].Inputs;
         HiddenLayers = NetworkTrainingScript.Instance._Behaviours[0].HiddenLayers;
         Outputs = NetworkTrainingScript.Instance._Behaviours[0].Outputs;
 
         // Set the filePath and init the network
-        FilePath = Path.Combine(Application.streamingAssetsPath, "Default.nn");
+        pathString = NetworkTrainingScript.Instance.GetTrainingNetwork() + ".nn";
+
+        FilePath = Path.Combine(Application.streamingAssetsPath, pathString);
         base.Start();
     }
 }

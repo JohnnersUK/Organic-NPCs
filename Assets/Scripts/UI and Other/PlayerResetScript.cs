@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ResetPlayer : MonoBehaviour
+public class PlayerResetScript : MonoBehaviour
 {
     [Header("Reset:")]
     [SerializeField] private bool resetPlayer;
@@ -16,7 +16,7 @@ public class ResetPlayer : MonoBehaviour
     public void Start()
     {
         DontDestroyOnLoad(gameObject);
-        foreach (ResetPlayer im in FindObjectsOfType<ResetPlayer>())
+        foreach (PlayerResetScript im in FindObjectsOfType<PlayerResetScript>())
         {
             if (im != this)
             {
@@ -30,14 +30,24 @@ public class ResetPlayer : MonoBehaviour
 
     void Update()
     {
+        if(Input.GetKeyUp(KeyCode.R))
+        {
+            resetPlayer = true;
+        }
+
         if (resetPlayer)
         {
-            Destroy(player);
-            player = null;
-
-            player = Instantiate(playerPrefab, spawn.position, spawn.rotation);
-            resetPlayer = false;
+            ResetPlayer();
         }
+    }
+
+    public void ResetPlayer()
+    {
+        Destroy(player);
+        player = null;
+
+        player = Instantiate(playerPrefab, spawn.position, spawn.rotation);
+        resetPlayer = false;
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)

@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 
 using UnityEngine;
@@ -9,7 +8,7 @@ using UnityStandardAssets.Characters.ThirdPerson;
 
 public class NeedsController : AiBehaviour
 {
-    [SerializeField] private GameObject TempInteractable;
+    [SerializeField] private GameObject TempInteractable = null;
     private GameObject tmp;
 
     // Components
@@ -24,6 +23,7 @@ public class NeedsController : AiBehaviour
 
     private bool Doing = false;
 
+    // Event system var
     private bool UnresolvedEvent;
     private float EventCounter;
     private EventType CurrentEventType;
@@ -116,6 +116,9 @@ public class NeedsController : AiBehaviour
                     case "Aggravate":
                     Aggravate(Target);
                     break;
+                    case "BeAggravated":
+                    BeAggravated(Target);
+                    break;
                 }
             }
         }
@@ -133,6 +136,8 @@ public class NeedsController : AiBehaviour
         NavMeshHit hit;
         Vector3 rndDir;
         Vector3 finalPosition;
+
+        GetComponentInChildren<Text>().text = "Getting Action";
 
         // Evaluate the NN
         Update();
@@ -204,25 +209,25 @@ public class NeedsController : AiBehaviour
             }
             else
             {
-                // Choose wether to decrease the priority and try again or get angry
+                // Choose wether to decrease the priority and try again, get angry or idle for a tunr
                 switch (Stats.faction)
                 {
                     case Factions.Barbarians:
                     {
-                        // 1 in 5 to get angry
-                        rnd = Random.Range(0, 10);
+                        // 1 in 50 to get angry
+                        rnd = Random.Range(0, 50);
                         break;
                     }
                     case Factions.Guards:
                     {
-                        // No chance to get angry
-                        rnd = 5;
+                        // No chance to get angry or idle
+                        rnd = 100;
                         break;
                     }
                     case Factions.Neutral:
                     {
-                        // 1 in 20 to get angry
-                        rnd = Random.Range(0, 20);
+                        // 1 in 100 to get angry
+                        rnd = Random.Range(0, 100);
                         break;
                     }
                 }
@@ -234,6 +239,26 @@ public class NeedsController : AiBehaviour
                     ActionQueue.Push(new QueueItem("Aggravate", Target));
                     ActionQueue.Push(new QueueItem("LookAt", Target));
                     ActionQueue.Push(new QueueItem("MoveTo", Target));
+                    hasAction = true;
+                }
+                else if(rnd <= 10)
+                {
+                    // Small change to also idle
+                    // Random a location on the navmesh
+                    rndDir = Random.insideUnitSphere * 10;
+                    rndDir += transform.position;
+                    NavMesh.SamplePosition(rndDir, out hit, 10, 1);
+                    finalPosition = hit.position;
+
+                    // Create a temp gameobject
+                    tmp = Instantiate(TempInteractable);
+                    tmp.name = "tmp";
+                    tmp.transform.position = hit.position;
+
+                    // Move to the gameobject
+                    ActionQueue.Push(new QueueItem("Idle", Target));
+                    ActionQueue.Push(new QueueItem("MoveTo", tmp));
+
                     hasAction = true;
                 }
                 else
@@ -266,84 +291,28 @@ public class NeedsController : AiBehaviour
         } while (!hasAction);
     }
 
+    #region Event System
     // Evaluates what to do in an event
     private void ResolveEvent()
     {
-        // Random a float between the fear floor and 20
-        float rnd = Random.Range(Stats.GetStat("fear"), 20);
-
-        List<GameObject> exits = new List<GameObject>();
-        QueueItem currentAction;
-
+        // Check the evnt type
         switch (CurrentEventType)
         {
-            default:
             case EventType.Death:
             {
-                if (Stats.faction == Factions.Neutral)
-                {
-                    // Reset animations and clear the queue
-                    AIAgent.isStopped = true;
-                    Anim.Play("Base Layer.Grounded");
-                    ActionQueue.Clear();
-
-                    // Make the bot run
-                    TPController.running = true;
-
-                    // Add actions to the queue
-                    ActionQueue.Push(new QueueItem("Hide", tmp));
-                    ActionQueue.Push(new QueueItem("Flee", tmp));
-
-                    // Set event time
-                    EventCounter = 30.0f;
-                    break;
-                }
+                ResolveDeath();
                 break;
             }
             case EventType.Hit:
             {
-                AIAgent.isStopped = true;
-                if (ActionQueue.Count == 0) // If theres nothing in the action queue
-                {
-                    Anim.Play("Base Layer.Grounded");
-
-                    // Random between running and watching
-                    // Bot will always run if fear is greater than 
-                    if (rnd > 19f)
-                    {
-                        // Flee
-                        ActionQueue.Push(new QueueItem("Hide", tmp));
-                        ActionQueue.Push(new QueueItem("Flee", tmp));
-
-                        EventCounter = 15.0f;
-                    }
-                    else
-                    {
-                        ActionQueue.Push(new QueueItem("LookAt", Target));
-                    }
-                }
-                else // If there is something in the queue
-                {
-                    currentAction = ActionQueue.Peek() as QueueItem;
-                    if (currentAction.Action != "LookAt" && currentAction.Action != "Flee" && currentAction.Action != "Hide")
-                    {
-                        // Random between running and watching
-                        // Bot will always run if fear is greater than
-                        if (rnd > 19f)
-                        {
-                            // Flee
-                            ActionQueue.Push(new QueueItem("Hide", Target));
-                            ActionQueue.Push(new QueueItem("Flee", Target));
-
-                            EventCounter = 15.0f;
-                        }
-                        else
-                        {
-                            Anim.Play("Base Layer.Grounded");
-                            ActionQueue.Push(new QueueItem("LookAt", Target));
-                        }
-                    }
-                }
+                ResolveHit();
+                break;
+            }
+            default:
+            case EventType.Other:
+            {
+                ActionQueue.Clear();
+                ActionQueue.Push(new QueueItem("LookAt", Target));
                 break;
             }
         }
@@ -351,9 +320,136 @@ public class NeedsController : AiBehaviour
         UnresolvedEvent = false;
     }
 
+    // Resolving a death event
+    private void ResolveDeath()
+    {
+        // Check the faction
+        switch (Stats.faction)
+        {
+            case Factions.Neutral:
+            {
+                // Reset animations and clear the queue
+                AIAgent.isStopped = true;
+                Anim.Play("Base Layer.Grounded");
+                ActionQueue.Clear();
+
+                // Make the bot run
+                TPController.running = true;
+
+                // Add actions to the queue
+                ActionQueue.Push(new QueueItem("Hide", tmp));
+                ActionQueue.Push(new QueueItem("Flee", tmp));
+
+                // Set event time
+                EventCounter = 15.0f;
+                break;
+            }
+            default:
+            {
+                ActionQueue.Clear();
+                ActionQueue.Push(new QueueItem("LookAt", Target));
+                break;
+            }
+        }
+    }
+
+    private void ResolveHit()
+    {
+        // Random a float between the fear floor and 20
+        float rnd = Random.Range(Stats.GetStat("fear"), 20);
+        QueueItem currentAction;
+
+        // If the target is invalid, return
+        if (Target == null)
+        {
+            return;
+        }
+
+        AIAgent.isStopped = true;
+
+        // Check the current action
+        if (ActionQueue.Count == 0) // If theres nothing in the action queue
+        {
+            // Set current action to empty
+            currentAction = new QueueItem("Empty", null);
+        }
+        else
+        {
+            // Get the current action
+            currentAction = ActionQueue.Peek() as QueueItem;
+        }
+
+        // Check the state of the bot
+        switch (Stats.faction)
+        {
+            case Factions.Neutral:
+            {
+                if (currentAction.Action != "LookAt" && currentAction.Action != "Flee" && currentAction.Action != "Hide")
+                {
+                    // Random between running and watching
+                    // Bot will always run if fear is greater than
+                    if (rnd > 19f)
+                    {
+                        // Flee
+                        ActionQueue.Push(new QueueItem("Hide", Target));
+                        ActionQueue.Push(new QueueItem("Flee", Target));
+
+                        EventCounter = 15.0f;
+                    }
+                    else
+                    {
+                        Anim.Play("Base Layer.Grounded");
+                        ActionQueue.Push(new QueueItem("LookAt", Target));
+                    }
+                }
+                break;
+            }
+            case Factions.Guards:
+            {
+                if (currentAction.Action != "LookAt" && currentAction.Action != "BeAggravated")
+                {
+                    if (Target.GetComponent<CharacterStats>() != null)
+                    {
+                        if (Target.GetComponent<CharacterStats>().faction != Factions.Guards)
+                        {
+                            ActionQueue.Push(new QueueItem("BeAggravated", Target));
+                        }
+                    }
+
+                    ActionQueue.Push(new QueueItem("LookAt", Target));
+                }
+                break;
+            }
+            case Factions.Barbarians:
+            {
+                if (currentAction.Action != "LookAt" && currentAction.Action != "BeAggravated")
+                {
+                    if (Target.GetComponent<CharacterStats>() != null)
+                    {
+                        if (Target.GetComponent<CharacterStats>().faction != Factions.Barbarians)
+                        {
+                            ActionQueue.Push(new QueueItem("BeAggravated", Target));
+                        }
+                    }
+
+                    ActionQueue.Push(new QueueItem("LookAt", Target));
+                }
+                break;
+            }
+        }
+
+    }
+
+    #endregion
+
+    #region Queue Actions
     // Move to a location
     private void MoveTo(GameObject t)
     {
+        // If the target is invalid
+        if (t == null)
+            return;
+
         Anim.Play("Base Layer.Grounded");
         GetComponentInChildren<Text>().text = "Moving to object";
 
@@ -453,7 +549,9 @@ public class NeedsController : AiBehaviour
     private void LookAtTarget()
     {
         if (Target == null)
+        {
             return;
+        }
 
         Vector3 lookPos;
         Quaternion rotation;
@@ -495,6 +593,13 @@ public class NeedsController : AiBehaviour
         // If the current rotation is within 1 degree
         if (Quaternion.Angle(transform.rotation, rotation) <= 1)
         {
+            // If looking at a temporary location
+            if (tmp != null)
+            {
+                Destroy(tmp);
+                tmp = null;
+            }
+
             Anim.SetFloat("Turn", 0);
             ActionQueue.Pop();
         }
@@ -507,6 +612,8 @@ public class NeedsController : AiBehaviour
         Vector3 rndDir;
         Vector3 finalPosition;
 
+        GetComponentInChildren<Text>().text = "Fleeing";
+
         if (!Doing || tmp == null)
         {
             TPController.running = true;
@@ -516,18 +623,19 @@ public class NeedsController : AiBehaviour
             NavMesh.SamplePosition(rndDir, out hit, 10, 1);
             finalPosition = hit.position;
 
-            // Create a temp gameobject
+            // Create a temp gameobject to run to
             tmp = Instantiate(TempInteractable);
             tmp.name = "tmp";
             tmp.transform.position = hit.position;
 
             Anim.Play("Base Layer.Grounded");
-            GetComponentInChildren<Text>().text = "Fleeing";
+            Anim.SetBool("Hiding", false);
 
             Doing = true;
         }
         else
         {
+            // If not near target, move to target
             if (Vector3.Distance(tmp.GetComponent<Interactable>().InteractPoint.position, transform.position) > 0.5)
             {
                 if (AIAgent.isOnNavMesh)
@@ -601,7 +709,7 @@ public class NeedsController : AiBehaviour
             // If the bot has finished aggravating
             ActionQueue.Pop();
 
-            // 'Hit' for 0 damage
+            // 'Hit' for 0 damage to anger the target
             t.GetComponent<CharacterStats>().GetHit(gameObject, 0);
             Stats.ModifyStat("anger", 1f);
             GetComponent<CombatController>().SetTarget(t);
@@ -615,18 +723,41 @@ public class NeedsController : AiBehaviour
             t.GetComponent<CharacterStats>().GetHit(gameObject, 0);
             Doing = true;
         }
-
     }
 
-    public void SetUsing(int u)
+    // Gets aggravated by a target
+    private void BeAggravated(GameObject t)
     {
-        if (u == 1)
+        GetComponentInChildren<Text>().text = "Angry";
+        if (Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + "Anger"))
         {
+            // If the bot has finished aggravating
+            ActionQueue.Clear();
+            Anim.Play("Base Layer.Grounded");
+
+            // Get angry at the target
+            Stats.ModifyStat("anger", 1f);
+            GetComponent<CombatController>().SetTarget(t);
+            Doing = false;
+        }
+        else if (!Doing && !Anim.GetCurrentAnimatorStateInfo(0).IsName("Base Layer." + Stats.faction.ToString() + "." + "Anger"))
+        {
+            // If the bot hasn't started aggravating
+            Anim.Play("Base Layer." + Stats.faction.ToString() + "." + "Anger");
             Doing = true;
         }
     }
+    #endregion
 
-    public void SetEvent(EventType et)
+    // Clears the queue and sets using, Handy for interupts
+    public void ClearQueue()
+    {
+        ActionQueue.Clear();
+        Doing = false;
+        SetTarget(null);
+    }
+
+    public void SetEvent(EventType et, Vector3 ep)
     {
         UnresolvedEvent = true;
         CurrentEventType = et;
@@ -651,5 +782,9 @@ public class NeedsController : AiBehaviour
             t.GetComponent<Interactable>().Occupied = true;
         }
 
+    }
+
+    public void SetUsing(int u)
+    {
     }
 }

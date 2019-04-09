@@ -58,6 +58,8 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] private ParticleSystem happy = null;
     [SerializeField] private ParticleSystem sad = null;
 
+    private bool Dead = false;
+
     // A dictionary of the character stats, for easy lookup and access
     public IDictionary<string, float> table = new Dictionary<string, float>()
     {
@@ -79,7 +81,7 @@ public class CharacterStats : MonoBehaviour
         {"fear", 0.0f},
 
         // Debug
-        {"random", 0.0f},
+        {"rcount", 0.0f},
         {"debug", 0.0f }
     };
 
@@ -110,6 +112,11 @@ public class CharacterStats : MonoBehaviour
 
     void Update()
     {
+        // If dead do nothing
+        if (Dead)
+            return;
+
+        // If invincible, decrease iframes until not invincible
         if (invincible)
         {
             icount -= 1 * Time.deltaTime;
@@ -118,6 +125,12 @@ public class CharacterStats : MonoBehaviour
                 invincible = false;
                 icount = iframes;
             }
+        }
+
+        // Check if dead
+        if(table["health"] <= 0)
+        {
+            Dead = true;
         }
 
         // Update stats table;
@@ -134,6 +147,7 @@ public class CharacterStats : MonoBehaviour
             icount = iframes;
         }
 
+        // Decrease relationship with the faction and add a happiness modifier
         DecreaseRelationship(agent, 10.0f);
         hModifiers.Add(-0.5f);
 
@@ -188,6 +202,10 @@ public class CharacterStats : MonoBehaviour
             //health -= 1 * Time.deltaTime;
             // Dissabled from gameplay testing feedback
         }
+        else if (table["hunger"] > 50 && !Dead) //Recover health if over 50 hunger
+        {
+            table["health"] = Mathf.Clamp(table["health"] + 2f * Time.deltaTime, 0.0f, 100.0f);
+        }
         table["boredom"] = Mathf.Clamp(table["boredom"] - 0.5f * Time.deltaTime, 0.0f, 100.0f);
         table["social"] = Mathf.Clamp(table["social"] - 1 * Time.deltaTime, 0.0f, 100.0f);
         table["fatigue"] = Mathf.Clamp(table["fatigue"] - 0.1f * Time.deltaTime, 0.0f, 100.0f);
@@ -234,12 +252,13 @@ public class CharacterStats : MonoBehaviour
             }
         }
 
+        table["rcount"] += Random.Range(0f, 2f) * Time.deltaTime;
+
         // Update inspector stats
         health = table["health"];
         stamina = table["stamina"];
         damage = table["damage"];
         range = table["range"];
-        table["random"] = Random.Range(-100f, 100f);
         debug = table["debug"];
 
         fatigue = table["fatigue"];
@@ -295,6 +314,7 @@ public class CharacterStats : MonoBehaviour
 
         table["anger"] = Random.Range(-10.0f, 10.0f);
         table["fear"] = Random.Range(0.0f, 0.0f);
+        table["rcount"] = Random.Range(0.0f, 10.0f);
 
         UpdateStats();
     }

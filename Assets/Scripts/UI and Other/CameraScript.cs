@@ -4,8 +4,8 @@ public class CameraScript : MonoBehaviour
 {
 
     [SerializeField] Transform Target;
-    [SerializeField] float minFov;
-    [SerializeField] float maxFov;
+    [SerializeField] float minFov = 20;
+    [SerializeField] float maxFov = 100;
 
     // Update is called once per frame
     void Update()
@@ -20,7 +20,8 @@ public class CameraScript : MonoBehaviour
         else
         {
             distance = Vector3.Distance(transform.position, Target.transform.position);
-            fov = 100 - (distance * 3);
+
+            fov = Mathf.Clamp((maxFov - (distance * 3)), minFov, maxFov);
 
             GetComponent<Camera>().fieldOfView = fov;
             transform.LookAt(Target);

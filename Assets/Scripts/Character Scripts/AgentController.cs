@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 
 using UnityEngine;
 using UnityEngine.AI;
@@ -11,13 +10,15 @@ public class AgentController : AiBehaviour
     [SerializeField] private Material DeadMat = null;
     [SerializeField] private AiBehaviour[] Behaviours = null;
 
+    [SerializeField] private float FallSpeed = 0.0f;
+    [SerializeField] private float DeathDelay = 10.0f;
+
     // Interactions
     private Transform InteractPoint;
 
     // Components
     private Animator Anim;
 
-    private CombatController CController;
     private NeedsController NController;
 
     private GameObject CombatTarget;
@@ -48,7 +49,6 @@ public class AgentController : AiBehaviour
         Stats = GetComponent<CharacterStats>();
 
         // Add Behaviors
-        CController = GetComponent<CombatController>();
         NController = GetComponent<NeedsController>();
 
         AIAgent.updateRotation = false;
@@ -69,7 +69,7 @@ public class AgentController : AiBehaviour
 
         if (currentState == State.Dead)
         {
-            return;
+            ResolveDeath();
         }
 
         // If the AI Agent isn't at its target position, 
@@ -120,7 +120,7 @@ public class AgentController : AiBehaviour
             {
                 currentState = State.Dead;
 
-                // Do nothing
+                // Set animator
                 if (!Anim.GetBool("Dead"))
                 {
                     Anim.SetBool("Dead", true);
@@ -128,6 +128,16 @@ public class AgentController : AiBehaviour
                     SendDeathEvent();
                 }
 
+                // Dissable its colliders
+                colliders = GetComponentsInChildren<AttackCollider>();
+                foreach (AttackCollider sc in colliders)
+                {
+                    sc.enabled = false;
+
+                }
+                GetComponent<CapsuleCollider>().enabled = false;
+
+                // Set skin
                 skin = GetComponentsInChildren<SkinnedMeshRenderer>();
 
                 foreach (SkinnedMeshRenderer smr in skin)
@@ -135,16 +145,28 @@ public class AgentController : AiBehaviour
                     smr.material = DeadMat;
                 }
 
+                // Stop the agent
                 AIAgent.isStopped = true;
+                AIAgent.enabled = false;
                 GetComponentInChildren<Text>().text = "Dead";
-
-                colliders = GetComponentsInChildren<AttackCollider>();
-
-                foreach (AttackCollider sc in colliders)
-                {
-                    sc.enabled = false;
-                }
             }
+        }
+    }
+
+    private void ResolveDeath()
+    {
+        if (transform.position.y <= -3.0f)
+        {
+            return;
+        }
+
+        // fall through the floor after a short delay
+        DeathDelay -= Time.deltaTime;
+        if (DeathDelay <= 0)
+        {
+            Vector3 newPos = transform.position;
+            newPos.y -= Time.deltaTime * FallSpeed;
+            transform.position = newPos;
         }
     }
 
@@ -177,8 +199,7 @@ public class AgentController : AiBehaviour
                 case Factions.Neutral:
                 {
                     // Interuption event and add fear
-                    NController.SetEvent(EventType.Hit);
-                    
+                    NController.SetEvent(EventType.Hit, args.Agent.transform.position);
                     NController.SetTarget(args.Agent);
                     Stats.ModifyStat("fear", 1.0f);
                     break;
@@ -188,23 +209,27 @@ public class AgentController : AiBehaviour
                     // Join in fight
                     if (subjectStats.faction == Stats.faction)
                     {
-                        Stats.ModifyStat("anger", 10.0f);
-                        CController.SetTarget(args.Agent);
-                    }
-                    else
-                    {
                         NController.SetTarget(args.Agent);
+                        NController.SetEvent(EventType.Hit, args.Agent.transform.position);
                     }
+                    else if (agentStats.faction == Stats.faction)
+                    {
+                        NController.SetTarget(args.Subject);
+                        NController.SetEvent(EventType.Hit, args.Subject.transform.position);
+                    }
+                    else // Or just watch
+                    {
+                        NController.SetTarget(args.Subject);
+                        NController.SetEvent(EventType.Other, args.Subject.transform.position);
+                    }
+
                     break;
                 }
                 case Factions.Guards:
                 {
-                    // Attack offender
-                    if (agentStats.faction != Factions.Guards)
-                    {
-                        Stats.ModifyStat("anger", 10.0f);
-                        CController.SetTarget(args.Agent);
-                    }
+                    // Apprehend aggressor
+                    NController.SetTarget(args.Subject);
+                    NController.SetEvent(EventType.Hit, args.Subject.transform.position);                      
                     break;
                 }
             }
@@ -224,19 +249,21 @@ public class AgentController : AiBehaviour
                 case Factions.Neutral:
                 {
                     // Flee
-                    NController.SetEvent(EventType.Death);
+                    NController.SetEvent(EventType.Death, args.Agent.transform.position);
 
                     Stats.ModifyStat("fear", 10.0f);
                     break;
                 }
                 case Factions.Barbarians:
                 {
-                    // Barbarians do not care for mortal death
+                    NController.SetEvent(EventType.Hit, args.Agent.transform.position);
+                    NController.SetTarget(args.Agent);
                     break;
                 }
                 case Factions.Guards:
                 {
-                    // Call for backup
+                    NController.SetEvent(EventType.Hit, args.Agent.transform.position);
+                    NController.SetTarget(args.Agent);
                     break;
                 }
             }
