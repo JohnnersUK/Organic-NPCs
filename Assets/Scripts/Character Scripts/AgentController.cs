@@ -228,8 +228,16 @@ public class AgentController : AiBehaviour
                 case Factions.Guards:
                 {
                     // Apprehend aggressor
-                    NController.SetTarget(args.Subject);
-                    NController.SetEvent(EventType.Hit, args.Subject.transform.position);                      
+                    if(agentStats.faction == Stats.faction)
+                    {
+                        NController.SetTarget(args.Subject);
+                        NController.SetEvent(EventType.Other, args.Subject.transform.position);
+                    }
+                    else
+                    {
+                        NController.SetTarget(args.Agent);
+                        NController.SetEvent(EventType.Hit, args.Agent.transform.position);
+                    }   
                     break;
                 }
             }

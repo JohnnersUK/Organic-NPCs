@@ -66,7 +66,7 @@ public class CharacterStats : MonoBehaviour
         // Combat
         {"health", 100.0f},
         {"stamina", 100.0f},
-        {"damage", 10.0f },
+        {"damage", 25.0f },
         {"range", 1.5f },
 
         // Needs

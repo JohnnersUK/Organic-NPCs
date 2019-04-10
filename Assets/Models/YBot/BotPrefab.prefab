@@ -2643,7 +2643,7 @@ MonoBehaviour:
   staminaGain: 10
   maxRechargeDelay: 1
   rechargeDelay: 0
-  damage: 10
+  damage: 25
   range: 2
   fatigue: 100
   hunger: 100
