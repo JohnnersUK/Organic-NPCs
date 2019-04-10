@@ -32,7 +32,7 @@ public class AiBehaviour : MonoBehaviour
         {
             // If a binary network file is found, load it
             Network = NetworkIO.instance.DeSerializeObject<NeuralNetwork>(FilePath);
-            Network.Name = gameObject.name;
+            Network.name = gameObject.name;
         }
         else
         {

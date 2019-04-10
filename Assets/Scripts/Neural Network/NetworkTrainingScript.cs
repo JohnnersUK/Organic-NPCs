@@ -231,7 +231,7 @@ public class NetworkTrainingScript : MonoBehaviour
         i = 0;
         for (k = networks.Count - 1; k >= 0; k--)
         {
-            Debug.Log(networks.Count - k + ") " + networks[k].Name + ": " + networks[k].GetFitness());
+            Debug.Log(networks.Count - k + ") " + networks[k].name + ": " + networks[k].GetFitness());
             tempWeights.Add(networks[k].GetWeights());
         }
 
